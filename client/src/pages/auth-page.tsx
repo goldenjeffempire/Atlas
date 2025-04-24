@@ -1,0 +1,294 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FaGoogle, FaLinkedin } from "react-icons/fa";
+import { Separator } from "@/components/ui/separator";
+import RoleSelector from "@/components/role-selector";
+import Logo from "@/components/logo";
+import { 
+  RegisterUserData, 
+  registerUserSchema,
+  LoginData,
+  Role 
+} from "@shared/schema";
+import { z } from "zod";
+import { motion } from "framer-motion";
+
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+export default function AuthPage() {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [selectedRole, setSelectedRole] = useState<Role>("general");
+  const { user, loginMutation, registerMutation } = useAuth();
+  const [, navigate] = useLocation();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/");
+    return null;
+  }
+
+  const loginForm = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const registerForm = useForm<RegisterUserData>({
+    resolver: zodResolver(registerUserSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      companyName: "",
+      role: "general",
+    },
+  });
+
+  const onLoginSubmit = (data: LoginData) => {
+    loginMutation.mutate(data);
+  };
+
+  const onRegisterSubmit = (data: RegisterUserData) => {
+    registerMutation.mutate({ ...data, role: selectedRole });
+  };
+
+  const handleRoleSelect = (role: Role) => {
+    setSelectedRole(role);
+    registerForm.setValue("role", role);
+  };
+
+  const toggleMode = () => {
+    setMode(mode === "signin" ? "signup" : "signin");
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row">
+      <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-primary-700 text-white md:w-2/5 p-8 flex flex-col justify-center auth-image"
+      >
+        <div className="bg-black bg-opacity-50 p-8 rounded-lg">
+          <Logo size="large" className="mb-8 text-white" />
+          <h2 className="text-xl font-bold mb-4">
+            {mode === "signin" ? "Sign In" : "Sign Up"}
+          </h2>
+          <p className="text-gray-200 mb-8">
+            {mode === "signin"
+              ? "Select your account type to access your workspace bookings."
+              : "Select your account type to get started with our workspace booking platform."}
+          </p>
+
+          <RoleSelector
+            selectedRole={selectedRole}
+            onRoleSelect={handleRoleSelect}
+            type={mode}
+          />
+
+          <p className="text-sm">
+            {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={toggleMode}
+              className="text-primary-300 hover:underline"
+            >
+              {mode === "signin" ? "Sign Up" : "Sign In"}
+            </button>
+          </p>
+        </div>
+      </motion.div>
+
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="md:w-3/5 p-8 flex items-center justify-center"
+      >
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-semibold">
+              {mode === "signin" ? "Welcome back" : "Create your account"}
+            </h2>
+            <p className="text-muted-foreground">
+              {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} account selected
+            </p>
+          </div>
+
+          {mode === "signin" ? (
+            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+              <div>
+                <Label htmlFor="login-email">Email Address</Label>
+                <Input
+                  id="login-email"
+                  placeholder="you@example.com"
+                  {...loginForm.register("email")}
+                  className="mt-1"
+                />
+                {loginForm.formState.errors.email && (
+                  <p className="text-sm text-destructive mt-1">
+                    {loginForm.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Button variant="link" className="p-0 h-auto text-primary text-xs">
+                    Forgot password?
+                  </Button>
+                </div>
+                <Input
+                  id="login-password"
+                  type="password"
+                  placeholder="Enter your password"
+                  {...loginForm.register("password")}
+                  className="mt-1"
+                />
+                {loginForm.formState.errors.password && (
+                  <p className="text-sm text-destructive mt-1">
+                    {loginForm.formState.errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                isLoading={loginMutation.isPending}
+                disabled={loginMutation.isPending}
+              >
+                Sign In
+              </Button>
+
+              <div className="relative flex items-center justify-center my-6">
+                <Separator className="w-full" />
+                <div className="text-sm text-muted-foreground bg-background px-3 absolute">
+                  or continue with
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" type="button" className="flex items-center justify-center">
+                  <FaGoogle className="mr-2 h-4 w-4" />
+                  Google
+                </Button>
+                <Button variant="outline" type="button" className="flex items-center justify-center">
+                  <FaLinkedin className="mr-2 h-4 w-4" />
+                  LinkedIn
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+              <div>
+                <Label htmlFor="company">Company Name</Label>
+                <Input
+                  id="company"
+                  placeholder="Enter your company name"
+                  {...registerForm.register("companyName")}
+                  className="mt-1"
+                />
+                {registerForm.formState.errors.companyName && (
+                  <p className="text-sm text-destructive mt-1">
+                    {registerForm.formState.errors.companyName.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  placeholder="you@example.com"
+                  {...registerForm.register("email")}
+                  className="mt-1"
+                />
+                {registerForm.formState.errors.email && (
+                  <p className="text-sm text-destructive mt-1">
+                    {registerForm.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Create a password"
+                  {...registerForm.register("password")}
+                  className="mt-1"
+                />
+                {registerForm.formState.errors.password && (
+                  <p className="text-sm text-destructive mt-1">
+                    {registerForm.formState.errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="Confirm your password"
+                  {...registerForm.register("confirmPassword")}
+                  className="mt-1"
+                />
+                {registerForm.formState.errors.confirmPassword && (
+                  <p className="text-sm text-destructive mt-1">
+                    {registerForm.formState.errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                isLoading={registerMutation.isPending}
+                disabled={registerMutation.isPending}
+              >
+                Create Account
+              </Button>
+
+              <div className="relative flex items-center justify-center my-6">
+                <Separator className="w-full" />
+                <div className="text-sm text-muted-foreground bg-background px-3 absolute">
+                  or continue with
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" type="button" className="flex items-center justify-center">
+                  <FaGoogle className="mr-2 h-4 w-4" />
+                  Google
+                </Button>
+                <Button variant="outline" type="button" className="flex items-center justify-center">
+                  <FaLinkedin className="mr-2 h-4 w-4" />
+                  LinkedIn
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
