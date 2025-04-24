@@ -5,6 +5,7 @@ import { setupAuth } from "./auth";
 import { z } from "zod";
 import { insertBookingSchema, insertWorkspaceSchema } from "@shared/schema";
 import { sendBookingConfirmation } from "./mailer";
+import { handleChatRequest } from "./perplexity";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes (login, register, logout, user)
@@ -212,6 +213,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
+  
+  // AI Chat endpoint
+  app.post("/api/chat", handleChatRequest);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -1,0 +1,86 @@
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+
+export type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+export type ChatResponse = {
+  choices: Array<{
+    message: {
+      role: 'assistant';
+      content: string;
+    };
+  }>;
+  citations?: string[];
+};
+
+export function useChat() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const { toast } = useToast();
+
+  const chatMutation = useMutation({
+    mutationFn: async (messages: ChatMessage[]) => {
+      const res = await apiRequest('POST', '/api/chat', { messages });
+      return await res.json() as ChatResponse;
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Chat Error',
+        description: error.message || 'Failed to get a response',
+        variant: 'destructive',
+      });
+      setIsTyping(false);
+    },
+  });
+
+  // Adds a user message and triggers the AI response
+  const sendMessage = async (userMessage: string) => {
+    if (!userMessage.trim()) return;
+    
+    // Add user message to state
+    const newMessages = [
+      ...messages,
+      { role: 'user', content: userMessage }
+    ];
+    
+    setMessages(newMessages);
+    setIsTyping(true);
+    
+    try {
+      // Get AI response
+      const response = await chatMutation.mutateAsync(newMessages);
+      
+      // Extract the assistant message from the response
+      const assistantMessage = response.choices[0]?.message?.content;
+      
+      if (assistantMessage) {
+        // Add assistant response to messages
+        setMessages([
+          ...newMessages,
+          { role: 'assistant', content: assistantMessage }
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to get chat response:', error);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // Reset the chat conversation
+  const resetChat = () => {
+    setMessages([]);
+  };
+
+  return {
+    messages,
+    isTyping,
+    sendMessage,
+    resetChat
+  };
+}
