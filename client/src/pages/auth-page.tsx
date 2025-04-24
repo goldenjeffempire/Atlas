@@ -171,10 +171,19 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 className="w-full"
-                isLoading={loginMutation.isPending}
                 disabled={loginMutation.isPending}
               >
-                Sign In
+                {loginMutation.isPending ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing In...
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
 
               <div className="relative flex items-center justify-center my-6">
@@ -228,6 +237,80 @@ export default function AuthPage() {
               </div>
 
               <div>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input
+                  id="phoneNumber"
+                  placeholder="Enter your phone number"
+                  {...registerForm.register("phoneNumber")}
+                  className="mt-1"
+                />
+                {registerForm.formState.errors.phoneNumber && (
+                  <p className="text-sm text-destructive mt-1">
+                    {registerForm.formState.errors.phoneNumber.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Role-specific fields */}
+              {selectedRole === "admin" && (
+                <>
+                  <div>
+                    <Label htmlFor="adminTitle">Job Title</Label>
+                    <Input
+                      id="adminTitle"
+                      placeholder="E.g. Facilities Manager"
+                      {...registerForm.register("adminTitle")}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="adminDepartment">Department</Label>
+                    <Input
+                      id="adminDepartment"
+                      placeholder="E.g. Operations"
+                      {...registerForm.register("adminDepartment")}
+                      className="mt-1"
+                    />
+                  </div>
+                </>
+              )}
+
+              {selectedRole === "general" && (
+                <div>
+                  <Label htmlFor="jobTitle">Job Title</Label>
+                  <Input
+                    id="jobTitle"
+                    placeholder="E.g. Software Engineer"
+                    {...registerForm.register("jobTitle")}
+                    className="mt-1"
+                  />
+                </div>
+              )}
+
+              {selectedRole === "employee" && (
+                <>
+                  <div>
+                    <Label htmlFor="employeeId">Employee ID</Label>
+                    <Input
+                      id="employeeId"
+                      placeholder="Enter your employee ID"
+                      {...registerForm.register("employeeId")}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="department">Department</Label>
+                    <Input
+                      id="department"
+                      placeholder="E.g. Engineering"
+                      {...registerForm.register("department")}
+                      className="mt-1"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div>
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
@@ -262,10 +345,19 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 className="w-full"
-                isLoading={registerMutation.isPending}
                 disabled={registerMutation.isPending}
               >
-                Create Account
+                {registerMutation.isPending ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Account...
+                  </div>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
 
               <div className="relative flex items-center justify-center my-6">

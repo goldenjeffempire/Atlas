@@ -9,6 +9,16 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   companyName: text("company_name").notNull(),
   role: text("role", { enum: ["admin", "general", "employee"] }).notNull().default("general"),
+  // Admin fields
+  adminTitle: text("admin_title"),
+  adminDepartment: text("admin_department"),
+  // General user fields
+  jobTitle: text("job_title"),
+  // Employee fields
+  employeeId: text("employee_id"),
+  department: text("department"),
+  // Common fields
+  phoneNumber: text("phone_number"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -63,6 +73,16 @@ export type LoginData = Pick<InsertUser, "email" | "password">;
 // Extended schemas for frontend validation
 export const registerUserSchema = insertUserSchema.extend({
   confirmPassword: z.string().min(6),
+  // Make these fields optional since they depend on role
+  phoneNumber: z.string().optional(),
+  // Admin fields
+  adminTitle: z.string().optional(),
+  adminDepartment: z.string().optional(),
+  // General fields
+  jobTitle: z.string().optional(),
+  // Employee fields
+  employeeId: z.string().optional(),
+  department: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

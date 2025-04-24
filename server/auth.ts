@@ -55,7 +55,10 @@ export function setupAuth(app: Express) {
           if (!user || !(await comparePasswords(password, user.password))) {
             return done(null, false, { message: "Invalid email or password" });
           } else {
-            return done(null, user);
+            // Remove password field from the user object for security
+            const userWithoutPassword = { ...user };
+            delete userWithoutPassword.password;
+            return done(null, userWithoutPassword);
           }
         } catch (error) {
           return done(error);
@@ -76,19 +79,52 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { email, password, role, companyName } = req.body;
+      const { 
+        email, 
+        password, 
+        role, 
+        companyName, 
+        phoneNumber,
+        // Role-specific fields
+        adminTitle,
+        adminDepartment,
+        jobTitle,
+        employeeId,
+        department
+      } = req.body;
       
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      const user = await storage.createUser({
+      // Create user data object with common fields
+      const userData = {
         email,
         password: await hashPassword(password),
         role,
         companyName,
-      });
+        phoneNumber
+      };
+
+      // Add role-specific fields based on the role
+      if (role === 'admin') {
+        Object.assign(userData, {
+          adminTitle,
+          adminDepartment
+        });
+      } else if (role === 'general') {
+        Object.assign(userData, {
+          jobTitle
+        });
+      } else if (role === 'employee') {
+        Object.assign(userData, {
+          employeeId,
+          department
+        });
+      }
+
+      const user = await storage.createUser(userData);
 
       req.login(user, (err) => {
         if (err) return next(err);
