@@ -223,40 +223,44 @@ export class DatabaseStorage implements IStorage {
     endTime: Date,
     excludeBookingId?: number
   ): Promise<boolean> {
-    // Query for any overlapping bookings
+    // Get all bookings for the workspace that are not cancelled
     let query = db
       .select()
       .from(bookings)
       .where(
         and(
           eq(bookings.workspaceId, workspaceId),
-          ne(bookings.status, "cancelled"),
-          or(
-            // Start time is within existing booking
-            and(
-              gte(bookings.startTime, startTime),
-              lt(bookings.startTime, endTime)
-            ),
-            // End time is within existing booking
-            and(
-              gt(bookings.endTime, startTime),
-              gte(endTime, bookings.endTime)
-            ),
-            // New booking completely contains existing booking
-            and(
-              lte(bookings.startTime, startTime),
-              gte(bookings.endTime, endTime)
-            )
-          )
+          ne(bookings.status, "cancelled")
         )
       );
     
     // Exclude the booking we're trying to update if applicable
     if (excludeBookingId) {
-      query = query.where(ne(bookings.id, excludeBookingId));
+      query = db
+        .select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.workspaceId, workspaceId),
+            ne(bookings.status, "cancelled"),
+            ne(bookings.id, excludeBookingId)
+          )
+        );
     }
     
-    const overlappingBookings = await query;
+    const workspaceBookings = await query;
+    
+    // Check for overlapping bookings manually since date comparison in the query is complex
+    const overlappingBookings = workspaceBookings.filter(booking => {
+      const bookingStart = new Date(booking.startTime);
+      const bookingEnd = new Date(booking.endTime);
+      
+      return (
+        (startTime >= bookingStart && startTime < bookingEnd) || // Start time is within existing booking
+        (endTime > bookingStart && endTime <= bookingEnd) || // End time is within existing booking
+        (startTime <= bookingStart && endTime >= bookingEnd) // New booking completely contains existing booking
+      );
+    });
     
     return overlappingBookings.length === 0;
   }
