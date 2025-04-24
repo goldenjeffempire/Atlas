@@ -17,6 +17,50 @@ async function main() {
   const db = drizzle(pool, { schema });
 
   console.log("Starting database schema push...");
+  
+  // Sample workspace data
+  const sampleWorkspaces = [
+    {
+      name: "Executive Suite",
+      location: "Floor 20, North Wing",
+      type: "private_office",
+      imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c",
+      features: JSON.stringify(["Window View", "Adjustable Desk", "Executive Chair", "Private Bathroom"]),
+      capacity: 1
+    },
+    {
+      name: "Collaboration Hub",
+      location: "Floor 15, Central Area",
+      type: "meeting_room",
+      imageUrl: "https://images.unsplash.com/photo-1577412647305-991150c7d163",
+      features: JSON.stringify(["Whiteboard", "Video Conferencing", "Smart TV", "Coffee Station"]),
+      capacity: 8
+    },
+    {
+      name: "Focus Pod A",
+      location: "Floor 10, East Wing",
+      type: "quiet_space",
+      imageUrl: "https://images.unsplash.com/photo-1497215728101-856f4ea42174",
+      features: JSON.stringify(["Soundproof", "Ergonomic Chair", "Standing Desk", "Natural Light"]),
+      capacity: 1
+    },
+    {
+      name: "Creative Studio",
+      location: "Floor 12, West Wing",
+      type: "creative_space",
+      imageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c",
+      features: JSON.stringify(["Drawing Boards", "Comfortable Seating", "Art Supplies", "Inspiration Wall"]),
+      capacity: 6
+    },
+    {
+      name: "Technology Lab",
+      location: "Floor 5, South Wing",
+      type: "specialized",
+      imageUrl: "https://images.unsplash.com/photo-1537726235470-8504e3beef77",
+      features: JSON.stringify(["High-End Computers", "3D Printer", "Testing Equipment", "Project Display Area"]),
+      capacity: 12
+    }
+  ];
 
   // Create the tables directly using SQL
   try {
@@ -69,6 +113,26 @@ async function main() {
     console.log("Bookings table created or already exists");
     
     console.log("Schema push completed successfully");
+    
+    // Insert sample workspaces if they don't exist
+    const existingWorkspaces = await db.execute(sql`SELECT COUNT(*) FROM workspaces`);
+    const workspaceCount = parseInt(existingWorkspaces.rows[0].count, 10);
+    
+    if (workspaceCount === 0) {
+      console.log("Inserting sample workspace data...");
+      
+      for (const workspace of sampleWorkspaces) {
+        await db.execute(
+          sql`INSERT INTO workspaces (name, location, type, image_url, features, capacity) 
+              VALUES (${workspace.name}, ${workspace.location}, ${workspace.type}, 
+                     ${workspace.imageUrl}, ${workspace.features}, ${workspace.capacity})`
+        );
+      }
+      
+      console.log("Sample workspace data inserted successfully");
+    } else {
+      console.log(`Skipping sample data insertion, found ${workspaceCount} existing workspaces`);
+    }
   } catch (error) {
     console.error("Schema push failed:", error);
     process.exit(1);
