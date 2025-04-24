@@ -1,0 +1,148 @@
+Build a modern, interactive, and visually appealing Workspace Booking App called ATLAS, inspired by apps like Skedda, Archie, and Tactic. The app should be responsive, professional, and optimized for performance and UX. It must be implemented using Next.js 14 (App Router), Tailwind CSS, TypeScript, and shadcn/ui components. Use Framer Motion for animations and transitions.
+
+🖼️ UI Pages (Match Designs Exactly as in Screenshots)
+Sign-Up Page
+
+Split-panel layout.
+
+Left panel with three role options:
+
+Sign Up as Admin
+
+Sign Up as General
+
+Sign Up as Employee
+
+Right panel form:
+
+Company Name
+
+Email
+
+Password + Confirm Password
+
+Social auth buttons (Google, LinkedIn)
+
+Clear visual role selection feedback.
+
+Sign-In Page
+
+Similar split layout.
+
+Left panel with:
+
+Sign In as Admin
+
+Sign In as General
+
+Sign In as Employee
+
+Right panel form:
+
+Email
+
+Password
+
+Social auth buttons
+
+“Sign Up” link
+
+User Dashboard (Bookings Overview)
+
+Booking cards (with images, tags, location, date).
+
+Search bar
+
+Filter by type (e.g. Desks, Rooms)
+
+“Upcoming” and “Past” tab toggle
+
+Buttons for:
+
+Reschedule
+
+New Booking
+
+Workspaces Listing Page
+
+Grid of workspace cards with:
+
+Workspace image
+
+Name, location, availability tag (e.g. Available / Booked)
+
+Features (e.g. Adjustable Height, Power Outlets)
+
+“Book Now” or “Unavailable” button
+
+Search workspace bar
+
+Filter functionality
+
+Clean hover effects and entry animations
+
+🎯 Must-Have Features
+Role-based Registration & Login (Admin, General, Employee)
+
+JWT Authentication with httpOnly cookies
+
+Booking System
+
+View availability
+
+Create, Reschedule, Cancel bookings
+
+Real-time Availability
+
+Email Notifications
+
+Analytics Dashboard for Admin
+
+Role-Based Access Control
+
+✨ Nice-to-Have Enhancements
+User profile management (avatar, history, preferences)
+
+Calendar integration (Google)
+
+Availability dashboard
+
+Admin: define workspace types, capacities, features
+
+Front desk check-in/check-out
+
+Workspace utilization metrics
+
+Payment support for premium spaces
+
+Mobile responsiveness or mobile-first PWA design
+
+Integrations: Slack, Google Workspace, Zoom
+
+Dedicated mobile app (optional)
+
+Tooltips, hover animations, transitions
+
+💄 Design & UX Requirements
+Modern, minimalist UI
+
+Professional color palette (light purple accent)
+
+Consistent branding (“atlas” logo and fonts)
+
+Animations for transitions, hover states using Framer Motion
+
+Accessible (WCAG-friendly)
+
+Responsive on all screen sizes
+
+Sticky navigation, intuitive routing
+
+🧰 Tech Stack
+Frontend: Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui, Framer Motion, React Icons
+
+Backend: Django REST Framework with PostgreSQL
+
+Authentication: JWT + httpOnly cookies
+
+Storage: PostgreSQL, optionally cloud for images
