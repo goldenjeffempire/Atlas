@@ -9,6 +9,7 @@ import DashboardPage from "@/pages/dashboard-page";
 import WorkspacesPage from "@/pages/workspaces-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { ChatWidget } from "./components/chat/chat-widget";
 
 function Router() {
   return (
@@ -28,10 +29,17 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          {/* Chat widget is rendered here when authenticated */}
+          <ChatWidgetContainer />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+// Simplified chat widget container that shows for all users
+function ChatWidgetContainer() {
+  return <ChatWidget />;
 }
 
 export default App;

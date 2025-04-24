@@ -1,7 +1,7 @@
 import { formatRelative } from 'date-fns';
 import { Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ChatMessage } from '@/hooks/use-chat';
+import { ChatMessage, ChatRole } from '@/hooks/use-chat';
 
 interface ChatMessageProps {
   message: ChatMessage;

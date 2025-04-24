@@ -3,8 +3,10 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
+export type ChatRole = 'user' | 'assistant' | 'system';
+
 export type ChatMessage = {
-  role: 'user' | 'assistant';
+  role: ChatRole;
   content: string;
 };
 
@@ -43,10 +45,8 @@ export function useChat() {
     if (!userMessage.trim()) return;
     
     // Add user message to state
-    const newMessages = [
-      ...messages,
-      { role: 'user', content: userMessage }
-    ];
+    const newUserMessage: ChatMessage = { role: 'user' as ChatRole, content: userMessage };
+    const newMessages = [...messages, newUserMessage];
     
     setMessages(newMessages);
     setIsTyping(true);
@@ -60,10 +60,11 @@ export function useChat() {
       
       if (assistantMessage) {
         // Add assistant response to messages
-        setMessages([
-          ...newMessages,
-          { role: 'assistant', content: assistantMessage }
-        ]);
+        const assistantChatMessage: ChatMessage = { 
+          role: 'assistant' as ChatRole, 
+          content: assistantMessage 
+        };
+        setMessages([...newMessages, assistantChatMessage]);
       }
     } catch (error) {
       console.error('Failed to get chat response:', error);
