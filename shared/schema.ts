@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // User schema with role enum
 export const users = pgTable("users", {
@@ -47,8 +48,8 @@ export const insertWorkspaceSchema = createInsertSchema(workspaces).omit({
 // Booking schema
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  workspaceId: integer("workspace_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  workspaceId: integer("workspace_id").notNull().references(() => workspaces.id),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   status: text("status", { enum: ["pending", "confirmed", "cancelled"] }).notNull().default("pending"),
@@ -89,3 +90,23 @@ export const registerUserSchema = insertUserSchema.extend({
 });
 
 export type RegisterUserData = z.infer<typeof registerUserSchema>;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  bookings: many(bookings),
+}));
+
+export const workspacesRelations = relations(workspaces, ({ many }) => ({
+  bookings: many(bookings),
+}));
+
+export const bookingsRelations = relations(bookings, ({ one }) => ({
+  user: one(users, {
+    fields: [bookings.userId],
+    references: [users.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [bookings.workspaceId],
+    references: [workspaces.id],
+  }),
+}));

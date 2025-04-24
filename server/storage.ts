@@ -5,9 +5,13 @@ import {
   Booking, InsertBooking
 } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { db, pool } from "./db";
+import { eq, and, or, gte, lt, ne, lte, gt } from "drizzle-orm";
 
-const MemoryStore = createMemoryStore(session);
+// Import types for session store
+import { Store } from "express-session";
+const PostgresSessionStore = connectPg(session);
 
 // Sample workspace images to use
 const workspaceImages = [
@@ -48,161 +52,169 @@ export interface IStorage {
   getAnalytics(): Promise<any>;
 
   // Session storage
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private workspaces: Map<number, Workspace>;
-  private bookings: Map<number, Booking>;
-  sessionStore: session.SessionStore;
-  private userIdCounter: number;
-  private workspaceIdCounter: number;
-  private bookingIdCounter: number;
+export class DatabaseStorage implements IStorage {
+  sessionStore: Store;
 
   constructor() {
-    this.users = new Map();
-    this.workspaces = new Map();
-    this.bookings = new Map();
-    this.userIdCounter = 1;
-    this.workspaceIdCounter = 1;
-    this.bookingIdCounter = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24 hours
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
     
-    // Initialize with some sample workspaces
-    this.initializeWorkspaces();
+    // Initialize sample workspace data when database is first created
+    this.initializeSampleData();
   }
 
-  private initializeWorkspaces() {
-    const workspaceTypes = ["desk", "meeting_room", "collaborative_space", "private_office", "focus_pod"];
-    const locations = ["North Wing, Floor 4", "East Wing, Floor 2", "West Wing, Floor 3", "South Wing, Floor 1", "East Wing, Floor 5"];
-    const names = [
-      "Executive Desk", "Conference Room", "Collaborative Space", 
-      "Private Office", "Focus Pod", "Standing Desk",
-      "Premium Desk", "Meeting Room", "Team Space", "Quiet Zone"
-    ];
-    const featuresList = [
-      ["Adjustable Height", "Power Outlets", "Quiet Zone"],
-      ["Video Conference", "Projector", "Seats 12"],
-      ["Team Space", "Whiteboard", "Lounge Area"],
-      ["Sound-proof", "Dedicated Phone", "Premium Desk"],
-      ["Privacy Glass", "Noise Cancelling", "Compact"],
-      ["Ergonomic", "USB-C Power", "Natural Light"],
-      ["Adjustable Height", "Window View", "Ergonomic Chair"],
-      ["Video Conference", "Whiteboard", "Seats 8"],
-      ["Team Space", "Projector", "Standing Desks"],
-      ["Window View", "Power Outlets", "Quiet Zone"]
-    ];
-
-    // Create 10 sample workspaces
-    for (let i = 0; i < 10; i++) {
-      const typeIndex = i % workspaceTypes.length;
-      const type = workspaceTypes[typeIndex];
-      const capacity = type === "desk" || type === "focus_pod" ? 1 : 
-                      type === "private_office" ? 4 : 
-                      type === "collaborative_space" ? 8 : 12;
+  private async initializeSampleData() {
+    try {
+      // Check if we already have workspaces
+      const existingWorkspaces = await this.getWorkspaces();
       
-      this.createWorkspace({
-        name: `${names[i]} ${String.fromCharCode(65 + i)}${Math.floor(Math.random() * 30)}`,
-        location: locations[i % locations.length],
-        type: type as any,
-        imageUrl: workspaceImages[i % workspaceImages.length],
-        features: featuresList[i % featuresList.length],
-        capacity
-      });
+      // Only initialize if there are no workspaces
+      if (existingWorkspaces.length === 0) {
+        const workspaceTypes = ["desk", "meeting_room", "collaborative_space", "private_office", "focus_pod"];
+        const locations = ["North Wing, Floor 4", "East Wing, Floor 2", "West Wing, Floor 3", "South Wing, Floor 1", "East Wing, Floor 5"];
+        const names = [
+          "Executive Desk", "Conference Room", "Collaborative Space", 
+          "Private Office", "Focus Pod", "Standing Desk",
+          "Premium Desk", "Meeting Room", "Team Space", "Quiet Zone"
+        ];
+        const featuresList = [
+          ["Adjustable Height", "Power Outlets", "Quiet Zone"],
+          ["Video Conference", "Projector", "Seats 12"],
+          ["Team Space", "Whiteboard", "Lounge Area"],
+          ["Sound-proof", "Dedicated Phone", "Premium Desk"],
+          ["Privacy Glass", "Noise Cancelling", "Compact"],
+          ["Ergonomic", "USB-C Power", "Natural Light"],
+          ["Adjustable Height", "Window View", "Ergonomic Chair"],
+          ["Video Conference", "Whiteboard", "Seats 8"],
+          ["Team Space", "Projector", "Standing Desks"],
+          ["Window View", "Power Outlets", "Quiet Zone"]
+        ];
+
+        // Create 10 sample workspaces
+        for (let i = 0; i < 10; i++) {
+          const typeIndex = i % workspaceTypes.length;
+          const type = workspaceTypes[typeIndex];
+          const capacity = type === "desk" || type === "focus_pod" ? 1 : 
+                           type === "private_office" ? 4 : 
+                           type === "collaborative_space" ? 8 : 12;
+          
+          await this.createWorkspace({
+            name: `${names[i]} ${String.fromCharCode(65 + i)}${Math.floor(Math.random() * 30)}`,
+            location: locations[i % locations.length],
+            type: type as any,
+            imageUrl: workspaceImages[i % workspaceImages.length],
+            features: featuresList[i % featuresList.length],
+            capacity
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to initialize sample data", error);
     }
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
-    );
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()));
+    return user;
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const createdAt = new Date();
-    const user: User = { ...userData, id, createdAt };
-    this.users.set(id, user);
-    return user;
+    const lowerCaseEmail = {
+      ...userData,
+      email: userData.email.toLowerCase()
+    };
+    
+    const [newUser] = await db
+      .insert(users)
+      .values(lowerCaseEmail)
+      .returning();
+    
+    return newUser;
   }
 
   // Workspace methods
   async getWorkspaces(): Promise<Workspace[]> {
-    return Array.from(this.workspaces.values());
+    return db.select().from(workspaces);
   }
 
   async getWorkspace(id: number): Promise<Workspace | undefined> {
-    return this.workspaces.get(id);
+    const [workspace] = await db
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.id, id));
+    return workspace;
   }
 
   async createWorkspace(workspaceData: InsertWorkspace): Promise<Workspace> {
-    const id = this.workspaceIdCounter++;
-    const createdAt = new Date();
-    const workspace: Workspace = { ...workspaceData, id, createdAt };
-    this.workspaces.set(id, workspace);
-    return workspace;
+    const [newWorkspace] = await db
+      .insert(workspaces)
+      .values(workspaceData)
+      .returning();
+    
+    return newWorkspace;
   }
 
   // Booking methods
   async getAllBookings(): Promise<Booking[]> {
-    return Array.from(this.bookings.values());
+    return db.select().from(bookings);
   }
 
   async getUserBookings(userId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(
-      (booking) => booking.userId === userId
-    );
+    return db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.userId, userId));
   }
 
   async getBooking(id: number): Promise<Booking | undefined> {
-    return this.bookings.get(id);
-  }
-
-  async createBooking(bookingData: InsertBooking): Promise<Booking> {
-    const id = this.bookingIdCounter++;
-    const createdAt = new Date();
-    const booking: Booking = { 
-      ...bookingData, 
-      id, 
-      createdAt, 
-      startTime: new Date(bookingData.startTime),
-      endTime: new Date(bookingData.endTime),
-      status: bookingData.status || "confirmed" 
-    };
-    this.bookings.set(id, booking);
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, id));
     return booking;
   }
 
+  async createBooking(bookingData: InsertBooking): Promise<Booking> {
+    const [newBooking] = await db
+      .insert(bookings)
+      .values(bookingData)
+      .returning();
+    
+    return newBooking;
+  }
+
   async updateBooking(id: number, bookingUpdate: Partial<Booking>): Promise<Booking> {
-    const booking = this.bookings.get(id);
-    if (!booking) {
+    const [updatedBooking] = await db
+      .update(bookings)
+      .set(bookingUpdate)
+      .where(eq(bookings.id, id))
+      .returning();
+    
+    if (!updatedBooking) {
       throw new Error("Booking not found");
     }
     
-    const updatedBooking = { ...booking, ...bookingUpdate };
-    
-    if (bookingUpdate.startTime) {
-      updatedBooking.startTime = new Date(bookingUpdate.startTime);
-    }
-    
-    if (bookingUpdate.endTime) {
-      updatedBooking.endTime = new Date(bookingUpdate.endTime);
-    }
-    
-    this.bookings.set(id, updatedBooking);
     return updatedBooking;
   }
 
   async deleteBooking(id: number): Promise<void> {
-    this.bookings.delete(id);
+    await db
+      .delete(bookings)
+      .where(eq(bookings.id, id));
   }
 
   async checkWorkspaceAvailability(
@@ -211,76 +223,95 @@ export class MemStorage implements IStorage {
     endTime: Date,
     excludeBookingId?: number
   ): Promise<boolean> {
-    const overlappingBookings = Array.from(this.bookings.values()).filter(
-      (booking) => {
-        // Skip if this is the booking we're trying to update
-        if (excludeBookingId && booking.id === excludeBookingId) {
-          return false;
-        }
-        
-        // Skip cancelled bookings
-        if (booking.status === "cancelled") {
-          return false;
-        }
-        
-        // Check if booking is for the same workspace
-        if (booking.workspaceId !== workspaceId) {
-          return false;
-        }
-        
-        // Check for time overlap
-        const bookingStart = new Date(booking.startTime);
-        const bookingEnd = new Date(booking.endTime);
-        
-        return (
-          (startTime >= bookingStart && startTime < bookingEnd) || // Start time is within existing booking
-          (endTime > bookingStart && endTime <= bookingEnd) || // End time is within existing booking
-          (startTime <= bookingStart && endTime >= bookingEnd) // New booking completely contains existing booking
-        );
-      }
-    );
+    // Query for any overlapping bookings
+    let query = db
+      .select()
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.workspaceId, workspaceId),
+          ne(bookings.status, "cancelled"),
+          or(
+            // Start time is within existing booking
+            and(
+              gte(bookings.startTime, startTime),
+              lt(bookings.startTime, endTime)
+            ),
+            // End time is within existing booking
+            and(
+              gt(bookings.endTime, startTime),
+              gte(endTime, bookings.endTime)
+            ),
+            // New booking completely contains existing booking
+            and(
+              lte(bookings.startTime, startTime),
+              gte(bookings.endTime, endTime)
+            )
+          )
+        )
+      );
+    
+    // Exclude the booking we're trying to update if applicable
+    if (excludeBookingId) {
+      query = query.where(ne(bookings.id, excludeBookingId));
+    }
+    
+    const overlappingBookings = await query;
     
     return overlappingBookings.length === 0;
   }
 
   // Analytics
   async getAnalytics(): Promise<any> {
-    const allBookings = Array.from(this.bookings.values());
-    const allWorkspaces = Array.from(this.workspaces.values());
+    // Get all workspaces and bookings
+    const allWorkspaces = await this.getWorkspaces();
+    const allBookings = await this.getAllBookings();
+    const allUsers = await db.select().from(users);
     
     // Current date for calculations
     const now = new Date();
     
-    // Total active bookings
+    // Active bookings
     const activeBookings = allBookings.filter(b => 
       b.status === "confirmed" && new Date(b.endTime) >= now
     );
     
-    // Count by workspace type
+    // Count bookings by workspace type
     const bookingsByType: Record<string, number> = {};
+    
+    // Create a map of workspace IDs to types for efficient lookup
+    const workspaceTypesMap = new Map(
+      allWorkspaces.map(workspace => [workspace.id, workspace.type])
+    );
+    
     for (const booking of activeBookings) {
-      const workspace = this.workspaces.get(booking.workspaceId);
-      if (workspace) {
-        bookingsByType[workspace.type] = (bookingsByType[workspace.type] || 0) + 1;
+      const workspaceType = workspaceTypesMap.get(booking.workspaceId);
+      if (workspaceType) {
+        bookingsByType[workspaceType] = (bookingsByType[workspaceType] || 0) + 1;
       }
     }
     
-    // Most popular workspaces
-    const workspacePopularity: Record<number, number> = {};
-    for (const booking of allBookings) {
+    // Count bookings per workspace
+    const bookingsCountByWorkspace = allBookings.reduce((counts, booking) => {
       if (booking.status !== "cancelled") {
-        workspacePopularity[booking.workspaceId] = (workspacePopularity[booking.workspaceId] || 0) + 1;
+        counts[booking.workspaceId] = (counts[booking.workspaceId] || 0) + 1;
       }
-    }
+      return counts;
+    }, {} as Record<number, number>);
     
-    const popularWorkspaces = Object.entries(workspacePopularity)
-      .map(([id, count]) => ({ 
-        workspace: this.workspaces.get(parseInt(id)), 
-        bookingsCount: count
+    // Get the most popular workspaces
+    const workspaceIdsSorted = Object.entries(bookingsCountByWorkspace)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 5)
+      .map(([id]) => parseInt(id));
+    
+    const popularWorkspaces = allWorkspaces
+      .filter(workspace => workspaceIdsSorted.includes(workspace.id))
+      .map(workspace => ({
+        workspace,
+        bookingsCount: bookingsCountByWorkspace[workspace.id]
       }))
-      .filter(item => item.workspace !== undefined)
-      .sort((a, b) => b.bookingsCount - a.bookingsCount)
-      .slice(0, 5);
+      .sort((a, b) => b.bookingsCount - a.bookingsCount);
     
     return {
       totalWorkspaces: allWorkspaces.length,
@@ -288,9 +319,9 @@ export class MemStorage implements IStorage {
       activeBookings: activeBookings.length,
       bookingsByType,
       popularWorkspaces,
-      totalUsers: this.users.size
+      totalUsers: allUsers.length
     };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
