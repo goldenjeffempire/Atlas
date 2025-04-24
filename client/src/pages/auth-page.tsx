@@ -65,10 +65,85 @@ export default function AuthPage() {
   };
 
   const onRegisterSubmit = (data: RegisterUserData) => {
-    registerMutation.mutate({ ...data, role: selectedRole });
+    // Create a validation function for role-specific fields
+    const validateRoleFields = (): boolean => {
+      let isValid = true;
+      // Reset form errors first
+      registerForm.clearErrors();
+
+      if (selectedRole === "admin") {
+        if (!data.adminTitle) {
+          registerForm.setError("adminTitle", { 
+            type: "required", 
+            message: "Admin title is required" 
+          });
+          isValid = false;
+        }
+        if (!data.adminDepartment) {
+          registerForm.setError("adminDepartment", { 
+            type: "required", 
+            message: "Department is required" 
+          });
+          isValid = false;
+        }
+      } else if (selectedRole === "general") {
+        if (!data.jobTitle) {
+          registerForm.setError("jobTitle", { 
+            type: "required", 
+            message: "Job title is required" 
+          });
+          isValid = false;
+        }
+      } else if (selectedRole === "employee") {
+        if (!data.employeeId) {
+          registerForm.setError("employeeId", { 
+            type: "required", 
+            message: "Employee ID is required" 
+          });
+          isValid = false;
+        }
+        if (!data.department) {
+          registerForm.setError("department", { 
+            type: "required", 
+            message: "Department is required" 
+          });
+          isValid = false;
+        }
+      }
+
+      if (!data.phoneNumber) {
+        registerForm.setError("phoneNumber", { 
+          type: "required", 
+          message: "Phone number is required" 
+        });
+        isValid = false;
+      }
+
+      return isValid;
+    };
+
+    // If role-specific validation passes, submit the form
+    if (validateRoleFields()) {
+      registerMutation.mutate({ ...data, role: selectedRole });
+    }
   };
 
   const handleRoleSelect = (role: Role) => {
+    // Clear any previous role-specific field errors and values
+    registerForm.clearErrors();
+    
+    // Clear previous role fields
+    if (selectedRole === "admin") {
+      registerForm.setValue("adminTitle", "");
+      registerForm.setValue("adminDepartment", "");
+    } else if (selectedRole === "general") {
+      registerForm.setValue("jobTitle", "");
+    } else if (selectedRole === "employee") {
+      registerForm.setValue("employeeId", "");
+      registerForm.setValue("department", "");
+    }
+    
+    // Update the role
     setSelectedRole(role);
     registerForm.setValue("role", role);
   };
@@ -260,8 +335,13 @@ export default function AuthPage() {
                       id="adminTitle"
                       placeholder="E.g. Facilities Manager"
                       {...registerForm.register("adminTitle")}
-                      className="mt-1"
+                      className={`mt-1 ${registerForm.formState.errors.adminTitle ? 'border-destructive' : ''}`}
                     />
+                    {registerForm.formState.errors.adminTitle && (
+                      <p className="text-sm text-destructive mt-1">
+                        {registerForm.formState.errors.adminTitle.message}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="adminDepartment">Department</Label>
@@ -269,8 +349,13 @@ export default function AuthPage() {
                       id="adminDepartment"
                       placeholder="E.g. Operations"
                       {...registerForm.register("adminDepartment")}
-                      className="mt-1"
+                      className={`mt-1 ${registerForm.formState.errors.adminDepartment ? 'border-destructive' : ''}`}
                     />
+                    {registerForm.formState.errors.adminDepartment && (
+                      <p className="text-sm text-destructive mt-1">
+                        {registerForm.formState.errors.adminDepartment.message}
+                      </p>
+                    )}
                   </div>
                 </>
               )}
@@ -282,8 +367,13 @@ export default function AuthPage() {
                     id="jobTitle"
                     placeholder="E.g. Software Engineer"
                     {...registerForm.register("jobTitle")}
-                    className="mt-1"
+                    className={`mt-1 ${registerForm.formState.errors.jobTitle ? 'border-destructive' : ''}`}
                   />
+                  {registerForm.formState.errors.jobTitle && (
+                    <p className="text-sm text-destructive mt-1">
+                      {registerForm.formState.errors.jobTitle.message}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -295,8 +385,13 @@ export default function AuthPage() {
                       id="employeeId"
                       placeholder="Enter your employee ID"
                       {...registerForm.register("employeeId")}
-                      className="mt-1"
+                      className={`mt-1 ${registerForm.formState.errors.employeeId ? 'border-destructive' : ''}`}
                     />
+                    {registerForm.formState.errors.employeeId && (
+                      <p className="text-sm text-destructive mt-1">
+                        {registerForm.formState.errors.employeeId.message}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="department">Department</Label>
@@ -304,8 +399,13 @@ export default function AuthPage() {
                       id="department"
                       placeholder="E.g. Engineering"
                       {...registerForm.register("department")}
-                      className="mt-1"
+                      className={`mt-1 ${registerForm.formState.errors.department ? 'border-destructive' : ''}`}
                     />
+                    {registerForm.formState.errors.department && (
+                      <p className="text-sm text-destructive mt-1">
+                        {registerForm.formState.errors.department.message}
+                      </p>
+                    )}
                   </div>
                 </>
               )}
