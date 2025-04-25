@@ -150,8 +150,8 @@ export function ChatWidget() {
               <Button 
                 type="submit" 
                 size="icon" 
-                disabled={isLoading || newMessage.trim() === ""}
-                className={isLoading ? "opacity-70" : ""}
+                disabled={isTyping || newMessage.trim() === ""}
+                className={isTyping ? "opacity-70" : ""}
               >
                 <Send size={18} />
               </Button>

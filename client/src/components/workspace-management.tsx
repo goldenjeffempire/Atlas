@@ -191,7 +191,7 @@ export function WorkspaceManagement() {
     
     // Parse features from workspace
     const workspaceFeatures = workspace.features as Record<string, boolean> || {};
-    const organization = workspaceFeatures.organization as string || "atlas";
+    const organization = (workspaceFeatures.organization as unknown as string) || "atlas";
     
     // Remove organization from features to avoid duplication
     const features = { ...workspaceFeatures };
@@ -333,7 +333,7 @@ export function WorkspaceManagement() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
                   {workspace.name}
-                  {workspace.hourlyRate > 0 && (
+                  {(workspace.hourlyRate ?? 0) > 0 && (
                     <span className="text-sm font-normal">${workspace.hourlyRate}/hr</span>
                   )}
                 </CardTitle>
