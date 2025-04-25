@@ -1,0 +1,165 @@
+Build a modern, scalable, and role-based workspace booking platform called ATLAS, designed for employees, admins, and general users across multiple organizations and locations.
+
+The platform should support physical space bookings (like desks and meeting rooms) and virtual conferencing (Zoom/Meet/Teams). It must be visually appealing, animated, mobile-friendly, and accessible — built using Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui, and Framer Motion.
+
+Include persistent live chat support on every page, powerful admin analytics, and full multi-location + multi-organization support.
+
+🎯 Core Functional Requirements
+👥 User Roles
+Admin – Manages users, bookings, workspaces, analytics
+
+Employee – Internal users who book and manage spaces
+
+General User – Public/freelance users who book open spaces
+
+Each role has:
+
+Custom dashboards
+
+Role-based permissions
+
+Tailored notifications and UI visibility
+
+🌍 Multi-Organization & Multi-Location Support
+Organizations can:
+
+Manage their own users and workspaces
+
+Set branding, policies, and availability
+
+Workspaces tagged by:
+
+City, Building, Floor, Campus, Region
+
+Filters and maps for location-based browsing
+
+🔐 Authentication & Account Management
+Role-based login and registration
+
+Google/LinkedIn OAuth
+
+JWT + httpOnly cookie auth
+
+Email verification & password reset
+
+Profile page: avatar, preferences, booking history
+
+🗓️ Workspace Booking System
+Book by type, location, time, and duration
+
+View availability status (Available / Booked / Unavailable)
+
+Modify bookings: cancel, reschedule, extend
+
+Recurring bookings (optional)
+
+Booking calendar (daily/weekly view)
+
+Search & filter by tags/features (e.g., AV, power, private)
+
+🛠️ Workspace Management (Admin)
+Create/edit/delete workspaces
+
+Assign features, images, availability hours
+
+Set capacity, blackout dates
+
+Associate spaces with specific organizations & locations
+
+📊 Dashboards
+User Dashboard
+Booking history and upcoming sessions
+
+Modify or cancel with 1-click
+
+Join virtual meeting links
+
+Admin Dashboard
+Analytics by date, location, type
+
+Peak usage times, user activity
+
+Exportable reports (CSV/PDF)
+
+Admin logs and audit trail
+
+💬 Live Chat Support (Every Page)
+Persistent floating widget (bottom right)
+
+AI bot with quick replies (e.g. "How to cancel?")
+
+Handoff to human support
+
+Chat visible on login, dashboard, bookings, admin, etc.
+
+Chat history saved per user
+
+🖥️ Virtual Conference & Online Booking
+Book virtual-only or hybrid spaces
+
+Auto-generate Zoom / Google Meet / Teams links
+
+“Join Meeting” button in user dashboard
+
+Meeting links in email & chat reminders
+
+Admins can create public/RSVP webinars
+
+Track attendance and session history
+
+📬 Notifications & Reminders
+Email confirmations & reminders
+
+In-app alerts for booking changes
+
+Push notifications (mobile or PWA)
+
+Optional SMS alerts
+
+📚 Informational Pages
+About: mission, vision, tech stack
+
+Contact: support form, map
+
+FAQ: categorized for Admin, Employee, General User
+
+Support Center: chatbot, help articles
+
+💳 Payments & Pricing (Optional)
+Define pricing for paid spaces
+
+Stripe / Paystack / Flutterwave integration
+
+Booking invoices and payment history
+
+Discounts & promo code system
+
+🔌 Integrations
+Google Calendar sync
+
+Slack notifications
+
+Zoom / Meet / Teams
+
+Google Maps / OpenStreetMap
+
+📱 Mobile & PWA Support
+Fully responsive interface
+
+Touch-optimized booking UX
+
+PWA-ready (offline mode, push)
+
+Optional mobile app (React Native / Flutter)
+
+🎨 UI/UX & Design Standards
+Modern, accessible design (WCAG-ready)
+
+Tailwind CSS + shadcn/ui for all components
+
+Framer Motion for smooth animations
+
+Sticky nav, modals, tooltips, transitions
+
+Light/dark mode toggle
+

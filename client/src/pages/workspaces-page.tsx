@@ -31,6 +31,9 @@ export default function WorkspacesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [selectedOrganization, setSelectedOrganization] = useState<string>("all");
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectedAvailability, setSelectedAvailability] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [capacity, setCapacity] = useState<number | undefined>(undefined);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -47,15 +50,55 @@ export default function WorkspacesPage() {
   
   const createBookingMutation = useCreateBooking();
   
-  // Helper function to get unique locations from workspaces
+  // Helper functions to get unique values from workspaces
   const getUniqueLocations = () => {
     if (!workspaces) return [];
     const locations = workspaces.map(workspace => workspace.location);
     return ["all", ...Array.from(new Set(locations))];
   };
   
+  const getUniqueOrganizations = () => {
+    if (!workspaces) return [];
+    // Extract organization names from features if available
+    const orgs = workspaces
+      .filter(ws => ws.features && typeof ws.features === 'object')
+      .map(ws => {
+        const features = ws.features as any;
+        return features.organization || "Unknown";
+      });
+    return ["all", ...Array.from(new Set(orgs))];
+  };
+  
+  const getAllWorkspaceFeatures = () => {
+    if (!workspaces) return [];
+    
+    // Collect all unique feature keys across workspaces
+    const allFeatures = new Set<string>();
+    workspaces.forEach(workspace => {
+      if (workspace.features && typeof workspace.features === 'object') {
+        const features = workspace.features as any;
+        Object.keys(features)
+          .filter(key => key !== 'organization' && typeof features[key] === 'boolean' && features[key])
+          .forEach(feature => allFeatures.add(feature));
+      }
+    });
+    
+    return Array.from(allFeatures);
+  };
+  
   // Get all workspace types from schema
   const workspaceTypes = ["all", "desk", "meeting_room", "collaborative_space", "private_office", "focus_pod"];
+  
+  // Available workspace features (common features)
+  const commonFeatures = [
+    "has_monitor", "has_projector", "has_whiteboard", 
+    "has_videoconference", "has_power", "has_ethernet",
+    "has_natural_light", "is_quiet_zone", "is_accessible",
+    "has_phone_booth", "has_kitchen_access"
+  ];
+  
+  // Availability status options
+  const availabilityOptions = ["all", "available", "partially_available", "unavailable"];
   
   // Filter workspaces based on all criteria
   const filteredWorkspaces = workspaces?.filter((workspace) => {
@@ -72,7 +115,24 @@ export default function WorkspacesPage() {
     const matchesCapacity = 
       !capacity || workspace.capacity >= capacity;
     
-    return matchesSearch && matchesType && matchesLocation && matchesCapacity;
+    // Organization filtering
+    const matchesOrganization = selectedOrganization === "all" || 
+      (workspace.features && 
+       typeof workspace.features === 'object' && 
+       (workspace.features as any).organization === selectedOrganization);
+    
+    // Feature filtering
+    const matchesFeatures = selectedFeatures.length === 0 || 
+      (workspace.features && typeof workspace.features === 'object' && 
+       selectedFeatures.every(feature => (workspace.features as any)[feature]));
+    
+    // Availability filtering (simplified for now)
+    const matchesAvailability = selectedAvailability === "all" || 
+      (selectedAvailability === "available" && workspace.isActive);
+    
+    return matchesSearch && matchesType && matchesLocation && 
+           matchesCapacity && matchesOrganization && 
+           matchesFeatures && matchesAvailability;
   });
   
   const handleBookNow = (workspace: Workspace) => {
@@ -209,67 +269,149 @@ export default function WorkspacesPage() {
                   className="bg-white p-4 rounded-lg shadow-sm mt-4"
                 >
                   <h3 className="font-medium mb-3">Advanced Filters</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Location Filter */}
-                    <div>
-                      <label className="text-sm font-medium block mb-1">Location</label>
-                      <Select 
-                        value={selectedLocation} 
-                        onValueChange={setSelectedLocation}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getUniqueLocations().map((location) => (
-                            <SelectItem key={location} value={location}>
-                              {location === "all" ? "All Locations" : location}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-6">
+                    {/* Basic filters */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Location Filter */}
+                      <div>
+                        <label className="text-sm font-medium block mb-1">Location</label>
+                        <Select 
+                          value={selectedLocation} 
+                          onValueChange={setSelectedLocation}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getUniqueLocations().map((location) => (
+                              <SelectItem key={location} value={location}>
+                                {location === "all" ? "All Locations" : location}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Organization Filter */}
+                      <div>
+                        <label className="text-sm font-medium block mb-1">Organization</label>
+                        <Select 
+                          value={selectedOrganization} 
+                          onValueChange={setSelectedOrganization}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select organization" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getUniqueOrganizations().map((org) => (
+                              <SelectItem key={org} value={org}>
+                                {org === "all" ? "All Organizations" : org}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Availability Filter */}
+                      <div>
+                        <label className="text-sm font-medium block mb-1">Availability</label>
+                        <Select 
+                          value={selectedAvailability} 
+                          onValueChange={setSelectedAvailability}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select availability" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availabilityOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option === "all" ? "All Availabilities" : 
+                                  option === "available" ? "Available Now" :
+                                  option === "partially_available" ? "Partially Available" : "Unavailable"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     
-                    {/* Capacity Filter */}
-                    <div>
-                      <label className="text-sm font-medium block mb-1">Minimum Capacity</label>
-                      <Select 
-                        value={capacity?.toString() || ""} 
-                        onValueChange={(value) => setCapacity(value ? parseInt(value) : undefined)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Any capacity" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">Any capacity</SelectItem>
-                          <SelectItem value="1">1+ person</SelectItem>
-                          <SelectItem value="2">2+ people</SelectItem>
-                          <SelectItem value="4">4+ people</SelectItem>
-                          <SelectItem value="6">6+ people</SelectItem>
-                          <SelectItem value="8">8+ people</SelectItem>
-                          <SelectItem value="10">10+ people</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {/* Additional filters */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Type Filter for more detailed selection */}
+                      <div>
+                        <label className="text-sm font-medium block mb-1">Workspace Type</label>
+                        <Select 
+                          value={selectedType} 
+                          onValueChange={setSelectedType}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {workspaceTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type === "all" ? "All Types" : formatWorkspaceType(type)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Capacity Filter */}
+                      <div>
+                        <label className="text-sm font-medium block mb-1">Minimum Capacity</label>
+                        <Select 
+                          value={capacity?.toString() || ""} 
+                          onValueChange={(value) => setCapacity(value ? parseInt(value) : undefined)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Any capacity" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Any capacity</SelectItem>
+                            <SelectItem value="1">1+ person</SelectItem>
+                            <SelectItem value="2">2+ people</SelectItem>
+                            <SelectItem value="4">4+ people</SelectItem>
+                            <SelectItem value="6">6+ people</SelectItem>
+                            <SelectItem value="8">8+ people</SelectItem>
+                            <SelectItem value="10">10+ people</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     
-                    {/* Type Filter for more detailed selection */}
+                    {/* Features section */}
                     <div>
-                      <label className="text-sm font-medium block mb-1">Workspace Type</label>
-                      <Select 
-                        value={selectedType} 
-                        onValueChange={setSelectedType}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {workspaceTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type === "all" ? "All Types" : formatWorkspaceType(type)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <label className="text-sm font-medium block mb-2">Workspace Features</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {commonFeatures.map(feature => {
+                          const isSelected = selectedFeatures.includes(feature);
+                          return (
+                            <Button
+                              key={feature}
+                              variant={isSelected ? "secondary" : "outline"}
+                              size="sm"
+                              className="justify-start"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedFeatures(selectedFeatures.filter(f => f !== feature));
+                                } else {
+                                  setSelectedFeatures([...selectedFeatures, feature]);
+                                }
+                              }}
+                            >
+                              <span className="w-4 h-4 mr-2 flex items-center justify-center">
+                                {isSelected && (
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </span>
+                              {feature.replace('has_', '').replace('is_', '').replace(/_/g, ' ')}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                   
@@ -280,10 +422,13 @@ export default function WorkspacesPage() {
                       onClick={() => {
                         setSelectedType("all");
                         setSelectedLocation("all");
+                        setSelectedOrganization("all");
+                        setSelectedAvailability("all");
+                        setSelectedFeatures([]);
                         setCapacity(undefined);
                       }}
                     >
-                      Reset Filters
+                      Reset All Filters
                     </Button>
                   </div>
                 </motion.div>
