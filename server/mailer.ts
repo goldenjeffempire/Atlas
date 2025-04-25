@@ -69,55 +69,6 @@ const templates = {
       <p><strong>End:</strong> ${data.endTime}</p>
     </div>
     <p>We look forward to seeing you!</p>
-  `,
-
-  bookingCancellation2: (data: BookingConfirmationData) => `
-    <h1>Workspace Booking Cancellation</h1>
-    <p>Hello ${data.userName},</p>
-    <p>Your workspace booking has been cancelled:</p>
-    <div style="margin: 20px 0;">
-      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
-      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
-      <p><strong>Start:</strong> ${data.startTime}</p>
-      <p><strong>End:</strong> ${data.endTime}</p>
-    </div>
-    <p>If you did not request this cancellation, please contact support.</p>
-  `,
-
-  bookingModification2: (data: BookingConfirmationData) => `
-    <h1>Workspace Booking Updated</h1>
-    <p>Hello ${data.userName},</p>
-    <p>Your workspace booking has been modified:</p>
-    <div style="margin: 20px 0;">
-      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
-      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
-      <p><strong>New Start:</strong> ${data.startTime}</p>
-      <p><strong>New End:</strong> ${data.endTime}</p>
-    </div>
-    <p>If you did not make these changes, please contact support immediately.</p>
-  `,
-  verifyEmail: (data: EmailVerificationData) => `
-    <h1>Welcome to ATLAS - Verify Your Email</h1>
-    <p>Hello ${data.userName},</p>
-    <p>Please verify your email by clicking the link below:</p>
-    <a href="${data.verificationLink}">Verify Email</a>
-    <p>This link will expire in 24 hours.</p>
-  `,
-
-  resetPassword: (data: PasswordResetData) => `
-    <h1>ATLAS Password Reset</h1>
-    <p>Hello ${data.userName},</p>
-    <p>Click the link below to reset your password:</p>
-    <a href="${data.resetLink}">Reset Password</a>
-    <p>This link will expire in 1 hour.</p>
-  `,
-
-  organizationInvite: (data: OrganizationInviteData) => `
-    <h1>Join ${data.organizationName} on ATLAS</h1>
-    <p>Hello,</p>
-    <p>You've been invited to join ${data.organizationName} on ATLAS.</p>
-    <p>Click below to accept the invitation:</p>
-    <a href="${data.inviteLink}">Accept Invitation</a>
   `
 };
 
@@ -128,21 +79,6 @@ interface BookingConfirmationData {
   startTime: string;
   endTime: string;
   bookingId: string;
-}
-
-interface EmailVerificationData {
-  userName: string;
-  verificationLink: string;
-}
-
-interface PasswordResetData {
-  userName: string;
-  resetLink: string;
-}
-
-interface OrganizationInviteData {
-  organizationName: string;
-  inviteLink: string;
 }
 
 // For development, log emails instead of sending
@@ -182,7 +118,7 @@ export async function sendBookingConfirmation(email: string, data: BookingConfir
   // Schedule reminder for 24h before booking
   const startTime = new Date(data.startTime);
   const reminderTime = addMinutes(startTime, -24 * 60);
-  
+
   if (reminderTime > new Date()) {
     setTimeout(async () => {
       await sendEmail(
@@ -192,28 +128,4 @@ export async function sendBookingConfirmation(email: string, data: BookingConfir
       );
     }, reminderTime.getTime() - Date.now());
   }
-}
-
-export async function sendVerificationEmail(data: EmailVerificationData) {
-  await sendEmail(
-    data.userName,
-    'Verify Your ATLAS Account',
-    templates.verifyEmail(data)
-  );
-}
-
-export async function sendPasswordResetEmail(data: PasswordResetData) {
-  await sendEmail(
-    data.userName,
-    'Reset Your ATLAS Password',
-    templates.resetPassword(data)
-  );
-}
-
-export async function sendOrganizationInvite(to: string, data: OrganizationInviteData) {
-  await sendEmail(
-    to,
-    `Join ${data.organizationName} on ATLAS`,
-    templates.organizationInvite(data)
-  );
 }
