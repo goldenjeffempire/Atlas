@@ -118,7 +118,7 @@ export default function NotificationsPage() {
   };
   
   const handleBack = () => {
-    navigate(-1);
+    navigate("/dashboard");
   };
   
   // Filter notifications based on active tab

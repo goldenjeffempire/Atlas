@@ -85,7 +85,7 @@ export default function GeneralDashboardPage() {
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">Welcome to ATLAS</h1>
               <p className="mt-1 text-sm text-gray-500">
-                Hello, {user?.name || user?.email?.split("@")[0] || 'there'}! Find and book your ideal workspace.
+                Hello, {user?.email?.split("@")[0] || user?.companyName || 'there'}! Find and book your ideal workspace.
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex gap-3">
@@ -339,14 +339,14 @@ export default function GeneralDashboardPage() {
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1 mb-4">
-                        {workspace.features.slice(0, 3).map((feature, index) => (
+                        {(workspace.features as string[]).slice(0, 3).map((feature: string, index: number) => (
                           <span key={index} className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
                             {feature}
                           </span>
                         ))}
-                        {workspace.features.length > 3 && (
+                        {(workspace.features as string[]).length > 3 && (
                           <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">
-                            +{workspace.features.length - 3} more
+                            +{(workspace.features as string[]).length - 3} more
                           </span>
                         )}
                       </div>
