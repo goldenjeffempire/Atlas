@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Notification, EntityType } from "@shared/schema";
-import { Bell, Calendar, Clock, Info, MessageCircle, X } from "lucide-react";
+import { Notification } from "@shared/schema";
+import { Bell, Calendar, Info, MessageCircle, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatTimeAgo } from "@/lib/utils";
