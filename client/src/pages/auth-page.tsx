@@ -318,6 +318,7 @@ export default function AuthPage() {
                       loginMutation.mutate(userData);
                       navigate('/dashboard');
                     } catch (error) {
+                      const { toast } = useToast();
                       toast({
                         title: "Access failed",
                         description: (error as Error).message,

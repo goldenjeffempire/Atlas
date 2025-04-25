@@ -19,6 +19,7 @@ import ProfilePage from "@/pages/profile-page";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ChatWidget } from "./components/chat-widget";
+import { ErrorBoundary } from '@/components/error-boundary';
 
 // Role-based dashboard routing
 function DashboardRouter() {
@@ -117,24 +118,26 @@ function Router() {
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
-  
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            {/* Chat widget is rendered here when authenticated */}
-            <ChatWidgetContainer />
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </div>
+    <ErrorBoundary>
+      <div className={darkMode ? 'dark' : ''}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              {/* Chat widget is rendered here when authenticated */}
+              <ChatWidgetContainer />
+            </TooltipProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </div>
+    </ErrorBoundary>
   );
 }
 
@@ -142,7 +145,7 @@ function App() {
 function ChatWidgetContainer() {
   const [location] = useLocation();
   const { user } = useAuth();
-  
+
   // Only show chat widget for authenticated users, hide on landing
   if (!user || location === "/") return null;
 

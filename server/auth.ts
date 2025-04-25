@@ -2,7 +2,8 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
-import * as jwt from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
+const { sign } = jsonwebtoken;
 import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
@@ -208,7 +209,7 @@ export function setupAuth(app: Express) {
         verified: true
       };
 
-      const token = jwt.sign({ id: tempUser.id }, JWT_SECRET, JWT_OPTIONS);
+      const token = sign({ id: tempUser.id }, JWT_SECRET, JWT_OPTIONS);
       res.cookie('jwt', token, { 
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
