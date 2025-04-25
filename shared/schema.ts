@@ -122,9 +122,39 @@ export type BookingStatus = "pending" | "confirmed" | "cancelled" | "checked_in"
 export type NotificationType = "booking_confirmation" | "booking_reminder" | "booking_cancellation" | "admin_message" | "system_alert";
 export type PaymentStatus = "unpaid" | "paid" | "refunded";
 export type MetricType = "daily_bookings" | "workspace_utilization" | "user_activity" | "revenue";
-export type EntityType = "user" | "workspace" | "booking" | "system";
+// Organization schema
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color"),
+  brandingSettings: jsonb("branding_settings"),
+  policies: jsonb("policies"),
+  features: jsonb("features"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Location schema
+export const locations = pgTable("locations", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  name: text("name").notNull(),
+  type: text("type", { enum: ["city", "building", "floor", "campus", "region"] }).notNull(),
+  parentLocationId: integer("parent_location_id").references(() => locations.id),
+  address: text("address"),
+  coordinates: jsonb("coordinates"), // For map integration
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type EntityType = "user" | "workspace" | "booking" | "system" | "organization" | "location";
 
 export type User = typeof users.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Location = typeof locations.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Workspace = typeof workspaces.$inferSelect;
 export type InsertWorkspace = z.infer<typeof insertWorkspaceSchema>;
