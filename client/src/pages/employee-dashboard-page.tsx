@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   PlusCircle, 
   Bell, 
   Clock,
@@ -20,6 +20,7 @@ import {
   BarChart,
   MapPin
 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
@@ -237,7 +238,7 @@ export default function EmployeeDashboardPage() {
                 <CardContent>
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg bg-white shadow-md flex items-center justify-center">
-                      <Calendar className="h-8 w-8 text-primary" />
+                      <CalendarIcon className="h-8 w-8 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold">{nextBooking.workspace.name}</h3>
@@ -272,7 +273,7 @@ export default function EmployeeDashboardPage() {
                 <CardContent>
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg bg-white shadow-md flex items-center justify-center">
-                      <Calendar className="h-8 w-8 text-gray-400" />
+                      <CalendarIcon className="h-8 w-8 text-gray-400" />
                     </div>
                     <div>
                       <p className="text-gray-600">You don't have any upcoming bookings.</p>
@@ -304,11 +305,11 @@ export default function EmployeeDashboardPage() {
                 <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-md transition-shadow overflow-hidden border-purple-100">
                   <CardContent className="p-4 relative">
                     <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
-                      <Calendar className="w-full h-full text-purple-600" />
+                      <CalendarIcon className="w-full h-full text-purple-600" />
                     </div>
                     <div className="flex items-center">
                       <div className="bg-purple-100 p-3 rounded-full mr-3 shadow-sm">
-                        <Calendar className="h-5 w-5 text-purple-700" />
+                        <CalendarIcon className="h-5 w-5 text-purple-700" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Today's Bookings</p>
@@ -559,7 +560,9 @@ export default function EmployeeDashboardPage() {
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={(date) => date && setSelectedDate(date)}
+                        onSelect={(date) => {
+                          if (date instanceof Date) setSelectedDate(date);
+                        }}
                         className="rounded-md border mx-auto"
                       />
                       <div className="mt-4">
@@ -728,9 +731,11 @@ export default function EmployeeDashboardPage() {
                     <Calendar
                       mode="single"
                       selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
+                      onSelect={(date) => {
+                        if (date instanceof Date) setSelectedDate(date);
+                      }}
                       className="rounded-md border mt-2"
-                      disabled={(date) => date < new Date() || date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
+                      disabled={(date: Date) => date < new Date() || date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
