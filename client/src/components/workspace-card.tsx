@@ -9,13 +9,32 @@ interface WorkspaceCardProps {
   workspace: Workspace;
   isAvailable?: boolean;
   onBookNow: (workspace: Workspace) => void;
+  isLoading?: boolean; // Added isLoading prop
 }
 
 export default function WorkspaceCard({
   workspace,
   isAvailable = true,
   onBookNow,
+  isLoading = false, // Added default value for isLoading
 }: WorkspaceCardProps) {
+  if (isLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <Card className="overflow-hidden border-border/40 transition-all hover:border-border/80 touch-manipulation">
+          <div className="h-48 w-full overflow-hidden relative rounded-lg border p-4 space-y-4 animate-pulse">
+            <div className="h-48 bg-gray-200 rounded-md"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

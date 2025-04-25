@@ -2,7 +2,8 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
-import { sign, verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+const { sign, verify } = jwt;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const JWT_EXPIRES = '12h';
 const JWT_REFRESH_EXPIRES = '7d';
@@ -10,7 +11,8 @@ const JWT_OPTIONS = {
   algorithm: 'HS512',
   expiresIn: JWT_EXPIRES,
   issuer: 'atlas-auth',
-  audience: 'atlas-app'
+  audience: 'atlas-app',
+  jwtid: crypto.randomBytes(16).toString('hex')
 };
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
