@@ -1,147 +1,73 @@
-import { useState } from "react";
+import { BellRing, X } from "lucide-react";
 import { Notification } from "@shared/schema";
-import { Bell, Calendar, Info, MessageCircle, X } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatTimeAgo } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface NotificationCardProps {
   notification: Notification;
   onDismiss: (id: number) => void;
-  onRead: (id: number) => void;
-  expandable?: boolean;
+  onMarkAsRead: (id: number) => void;
 }
 
-export function NotificationCard({
+export default function NotificationCard({
   notification,
   onDismiss,
-  onRead,
-  expandable = true,
+  onMarkAsRead,
 }: NotificationCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const getIconForType = (type: string) => {
+    switch (type) {
+      case "booking_confirmation":
+        return <BellRing className="h-5 w-5 text-green-500" />;
+      case "booking_reminder":
+        return <BellRing className="h-5 w-5 text-blue-500" />;
+      case "booking_cancellation":
+        return <BellRing className="h-5 w-5 text-red-500" />;
+      case "admin_message":
+        return <BellRing className="h-5 w-5 text-purple-500" />;
+      case "system_alert":
+        return <BellRing className="h-5 w-5 text-yellow-500" />;
+      default:
+        return <BellRing className="h-5 w-5" />;
+    }
+  };
 
-  const handleCardClick = () => {
+  const handleClick = () => {
     if (!notification.isRead) {
-      onRead(notification.id);
-    }
-    if (expandable) {
-      setExpanded(!expanded);
-    }
-  };
-
-  const renderIcon = () => {
-    switch (notification.type) {
-      case "booking_confirmation":
-      case "booking_reminder":
-      case "booking_cancellation":
-        return <Calendar className="h-5 w-5 text-primary" />;
-      case "admin_message":
-        return <MessageCircle className="h-5 w-5 text-indigo-500" />;
-      case "system_alert":
-        return <Info className="h-5 w-5 text-orange-500" />;
-      default:
-        return <Bell className="h-5 w-5 text-slate-500" />;
-    }
-  };
-
-  const renderBadgeText = () => {
-    switch (notification.type) {
-      case "booking_confirmation":
-        return "Confirmation";
-      case "booking_reminder":
-        return "Reminder";
-      case "booking_cancellation":
-        return "Cancellation";
-      case "admin_message":
-        return "Admin";
-      case "system_alert":
-        return "System";
-      default:
-        return "Notification";
-    }
-  };
-
-  const getBadgeVariant = () => {
-    switch (notification.type) {
-      case "booking_confirmation":
-        return "success";
-      case "booking_reminder":
-        return "default";
-      case "booking_cancellation":
-        return "destructive";
-      case "admin_message":
-        return "outline";
-      case "system_alert":
-        return "warning";
-      default:
-        return "secondary";
+      onMarkAsRead(notification.id);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
+    <div
+      className={cn(
+        "relative flex items-start gap-4 rounded-lg border p-4 mb-3 transition-all",
+        notification.isRead
+          ? "bg-card"
+          : "bg-accent border-l-4 border-l-primary"
+      )}
+      onClick={handleClick}
     >
-      <Card 
-        className={`relative mb-3 cursor-pointer overflow-hidden transition-all duration-300 ease-in-out hover:shadow-md ${
-          notification.isRead ? "bg-card/60" : "bg-card border-l-4 border-l-primary"
-        }`}
-        onClick={handleCardClick}
-      >
-        {!notification.isRead && (
-          <div className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-        )}
-        
-        <div className="relative flex p-4">
-          <div className="mr-3 flex-shrink-0">{renderIcon()}</div>
-          
-          <div className="flex-grow pr-6">
-            <div className="mb-1 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h4 className={`text-sm font-medium ${notification.isRead ? "text-foreground/70" : "text-foreground"}`}>
-                  {notification.title}
-                </h4>
-                <Badge variant={getBadgeVariant() as any} className="text-[10px]">
-                  {renderBadgeText()}
-                </Badge>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {formatTimeAgo(notification.createdAt)}
-              </span>
-            </div>
-            
-            <p className={`text-sm ${notification.isRead ? "text-muted-foreground" : "text-foreground/80"}`}>
-              {expanded || !expandable
-                ? notification.message
-                : notification.message.length > 120
-                ? `${notification.message.slice(0, 120)}...`
-                : notification.message}
-            </p>
-            
-            {notification.relatedBookingId && expandable && expanded && (
-              <div className="mt-2">
-                <Badge variant="outline" className="text-xs">
-                  Booking ID: {notification.relatedBookingId}
-                </Badge>
-              </div>
-            )}
-          </div>
-          
+      <div className="mt-1">{getIconForType(notification.type)}</div>
+
+      <div className="flex-1 space-y-1">
+        <div className="flex items-center justify-between">
+          <h4 className="font-semibold">{notification.title}</h4>
           <button
-            className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground/60 hover:bg-accent hover:text-foreground"
             onClick={(e) => {
               e.stopPropagation();
               onDismiss(notification.id);
             }}
+            className="text-muted-foreground hover:text-foreground rounded-full p-1"
+            aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-      </Card>
-    </motion.div>
+        <p className="text-sm text-muted-foreground">{notification.message}</p>
+        <p className="text-xs text-muted-foreground">
+          {formatTimeAgo(notification.createdAt)}
+        </p>
+      </div>
+    </div>
   );
 }

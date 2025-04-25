@@ -8,7 +8,7 @@ import {
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
-import { eq, and, or, gte, lt, ne, lte, gt } from "drizzle-orm";
+import { eq, and, or, gte, lt, ne, lte, gt, desc } from "drizzle-orm";
 
 // Import types for session store
 import { Store } from "express-session";
@@ -312,11 +312,16 @@ export class DatabaseStorage implements IStorage {
 
   // Notification methods
   async getUserNotifications(userId: number): Promise<Notification[]> {
-    return db
+    // Fetch all notifications for the user
+    const userNotifications = await db
       .select()
       .from(notifications)
-      .where(eq(notifications.userId, userId))
-      .orderBy(notifications.createdAt, "desc");
+      .where(eq(notifications.userId, userId));
+    
+    // Sort them manually by creation date (newest first)
+    return userNotifications.sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }
 
   async getNotification(id: number): Promise<Notification | undefined> {
@@ -339,7 +344,7 @@ export class DatabaseStorage implements IStorage {
   async markNotificationAsRead(id: number): Promise<Notification> {
     const [updatedNotification] = await db
       .update(notifications)
-      .set({ read: true })
+      .set({ isRead: true })
       .where(eq(notifications.id, id))
       .returning();
     
