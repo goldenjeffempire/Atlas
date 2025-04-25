@@ -76,15 +76,15 @@ export default function BookingDetailPage() {
     
     createBookingMutation.mutate({
       workspaceId: workspace.id,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
+      startTime: startDateTime,
+      endTime: endDateTime,
       status: "confirmed",
       title: `Booking for ${workspace.name}`,
       description: "Regular workspace booking",
       participants: null, // Add empty participants
       paymentStatus: "unpaid",
-      amount: workspace.hourlyRate ? 
-        Math.round((endDateTime.getTime() - startDateTime.getTime()) / 3600000) * workspace.hourlyRate : 0
+      amount: (workspace as any).hourlyRate ? 
+        Math.round((endDateTime.getTime() - startDateTime.getTime()) / 3600000) * (workspace as any).hourlyRate : 0
     });
   };
   
@@ -189,7 +189,7 @@ export default function BookingDetailPage() {
                     
                     <h2 className="text-lg font-medium mb-3">Features</h2>
                     <div className="grid grid-cols-2 gap-y-3">
-                      {workspace.features.map((feature, index) => (
+                      {(workspace.features as string[]).map((feature: string, index: number) => (
                         <div key={index} className="flex items-center">
                           <div className="h-8 w-8 rounded-full bg-purple-50 flex items-center justify-center mr-2">
                             {feature.includes('Wi-Fi') ? (
@@ -303,10 +303,16 @@ export default function BookingDetailPage() {
                   <Button 
                     className="w-full"
                     onClick={handleCreateBooking}
-                    isLoading={createBookingMutation.isPending}
                     disabled={createBookingMutation.isPending || !selectedDate}
                   >
-                    Confirm Booking
+                    {createBookingMutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Processing...
+                      </span>
+                    ) : (
+                      "Confirm Booking"
+                    )}
                   </Button>
                 </div>
               </motion.div>

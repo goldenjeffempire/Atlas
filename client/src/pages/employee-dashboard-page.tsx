@@ -63,15 +63,50 @@ export default function EmployeeDashboardPage() {
     setShowRescheduleDialog(true);
   };
 
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(new Date());
+  const [rescheduleStartTime, setRescheduleStartTime] = useState("09:00");
+  const [rescheduleEndTime, setRescheduleEndTime] = useState("17:00");
+  
+  // Generate time slots for reschedule dialog
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour <= 18; hour++) {
+      const formattedHour = hour.toString().padStart(2, '0');
+      slots.push(`${formattedHour}:00`);
+      if (hour < 18) {
+        slots.push(`${formattedHour}:30`);
+      }
+    }
+    return slots;
+  };
+  
+  const timeSlots = generateTimeSlots();
+  
   const handleRescheduleSubmit = () => {
-    if (!selectedBooking) return;
+    if (!selectedBooking || !rescheduleDate) return;
     
-    // In a real application, we would update the booking here
-    // updateBookingMutation.mutate({ id: selectedBooking.id, ... });
+    const startDateTime = new Date(rescheduleDate);
+    const [startHour, startMinute] = rescheduleStartTime.split(":").map(Number);
+    startDateTime.setHours(startHour, startMinute, 0, 0);
     
-    toast({
-      title: "Booking rescheduled",
-      description: `Your booking for ${selectedBooking.workspace.name} has been rescheduled.`,
+    const endDateTime = new Date(rescheduleDate);
+    const [endHour, endMinute] = rescheduleEndTime.split(":").map(Number);
+    endDateTime.setHours(endHour, endMinute, 0, 0);
+    
+    // Validate times
+    if (endDateTime <= startDateTime) {
+      toast({
+        title: "Invalid time range",
+        description: "End time must be after start time.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    updateBookingMutation.mutate({ 
+      id: selectedBooking.id,
+      startTime: startDateTime,
+      endTime: endDateTime
     });
     
     setShowRescheduleDialog(false);
@@ -730,9 +765,9 @@ export default function EmployeeDashboardPage() {
                     <Label className="text-sm font-medium">Date</Label>
                     <Calendar
                       mode="single"
-                      selected={selectedDate}
+                      selected={rescheduleDate}
                       onSelect={(date) => {
-                        if (date instanceof Date) setSelectedDate(date);
+                        if (date instanceof Date) setRescheduleDate(date);
                       }}
                       className="rounded-md border mt-2"
                       disabled={(date: Date) => date < new Date() || date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
@@ -741,39 +776,31 @@ export default function EmployeeDashboardPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium">Start Time</Label>
-                      <Select defaultValue="09:00">
+                      <Select value={rescheduleStartTime} onValueChange={setRescheduleStartTime}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select start time" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="08:00">8:00 AM</SelectItem>
-                          <SelectItem value="09:00">9:00 AM</SelectItem>
-                          <SelectItem value="10:00">10:00 AM</SelectItem>
-                          <SelectItem value="11:00">11:00 AM</SelectItem>
-                          <SelectItem value="12:00">12:00 PM</SelectItem>
-                          <SelectItem value="13:00">1:00 PM</SelectItem>
-                          <SelectItem value="14:00">2:00 PM</SelectItem>
-                          <SelectItem value="15:00">3:00 PM</SelectItem>
-                          <SelectItem value="16:00">4:00 PM</SelectItem>
+                          {timeSlots.map((time) => (
+                            <SelectItem key={`reschedule-start-${time}`} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">End Time</Label>
-                      <Select defaultValue="17:00">
+                      <Select value={rescheduleEndTime} onValueChange={setRescheduleEndTime}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select end time" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="09:00">9:00 AM</SelectItem>
-                          <SelectItem value="10:00">10:00 AM</SelectItem>
-                          <SelectItem value="11:00">11:00 AM</SelectItem>
-                          <SelectItem value="12:00">12:00 PM</SelectItem>
-                          <SelectItem value="13:00">1:00 PM</SelectItem>
-                          <SelectItem value="14:00">2:00 PM</SelectItem>
-                          <SelectItem value="15:00">3:00 PM</SelectItem>
-                          <SelectItem value="16:00">4:00 PM</SelectItem>
-                          <SelectItem value="17:00">5:00 PM</SelectItem>
+                          {timeSlots.map((time) => (
+                            <SelectItem key={`reschedule-end-${time}`} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
