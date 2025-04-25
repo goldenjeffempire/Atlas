@@ -720,7 +720,7 @@ export default function EnhancedEmployeeDashboardPage() {
                         </div>
                       </div>
                       
-                      {/* Calendar component would go here - just a placeholder layout */}
+                      {/* Simple calendar grid for the demo */}
                       <div className="grid grid-cols-7 gap-1 text-center text-xs">
                         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                           <div key={i} className="py-1 font-medium text-gray-500">{day}</div>

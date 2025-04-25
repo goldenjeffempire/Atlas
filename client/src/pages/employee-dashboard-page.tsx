@@ -193,7 +193,7 @@ export default function EmployeeDashboardPage() {
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">Employee Dashboard</h1>
               <p className="mt-1 text-sm text-gray-500">
-                Welcome back, {user?.name || user?.email?.split("@")[0] || 'Employee'}
+                Welcome back, {user?.email?.split("@")[0] || 'Employee'}
               </p>
             </div>
             <div className="mt-4 md:mt-0 flex gap-3">

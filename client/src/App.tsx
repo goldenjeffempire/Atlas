@@ -49,14 +49,16 @@ function Router() {
       <Route path="/" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/dashboard" component={DashboardRouter} />
-      <Route path="/workspaces" component={WorkspacesPage} />
-      <Route path="/workspaces/:id/book" component={BookingDetailPage} />
-      <Route path="/search/:query" component={SearchResultsPage} />
-      <Route path="/notifications" component={NotificationsPage} />
-      <Route path="/admin" component={AdminDashboardPage} />
-      <Route path="/employee" component={EnhancedEmployeeDashboardPage} />
-      <Route path="/general" component={GeneralDashboardPage} />
-      <Route path="/profile" component={ProfilePage} />
+      
+      {/* Protected routes */}
+      <ProtectedRoute path="/workspaces" component={WorkspacesPage} />
+      <ProtectedRoute path="/workspaces/:id/book" component={BookingDetailPage} />
+      <ProtectedRoute path="/search/:query" component={SearchResultsPage} />
+      <ProtectedRoute path="/notifications" component={NotificationsPage} />
+      <ProtectedRoute path="/admin" component={AdminDashboardPage} />
+      <ProtectedRoute path="/employee" component={EnhancedEmployeeDashboardPage} />
+      <ProtectedRoute path="/general" component={GeneralDashboardPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -24,7 +24,8 @@ export function AnimatedCard({
       case "bounce":
         return { y: -7, transition: { type: "spring", stiffness: 300 } };
       case "glow":
-        return { boxShadow: "0 0 15px rgba(124, 58, 237, 0.5)" };
+        // Use CSS class for glow effects since boxShadow in motion is problematic
+        return {}; 
       case "none":
         return {};
       default:
@@ -38,7 +39,11 @@ export function AnimatedCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
       whileHover={getHoverAnimation()}
-      className={cn("overflow-hidden", className)}
+      className={cn(
+        "overflow-hidden", 
+        hover === "glow" ? "hover:shadow-lg hover:shadow-purple-200/50 transition-shadow duration-300" : "",
+        className
+      )}
     >
       {children}
     </motion.div>
