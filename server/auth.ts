@@ -206,10 +206,11 @@ export function verifyJWT(req: any, res: any, next: any) {
   if (!token) return res.status(401).json({ message: 'No token provided' });
 
   try {
-    const decoded = verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = (decoded as any).id;
     next();
   } catch (error) {
+    res.clearCookie('jwt');
     res.status(401).json({ message: 'Invalid token' });
   }
 }

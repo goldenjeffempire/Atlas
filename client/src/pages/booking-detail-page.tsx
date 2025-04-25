@@ -9,9 +9,13 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
 export default function BookingDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const { data: booking, cancelBooking, isLoading } = useBookings();
-  const currentBooking = booking?.find(b => b.id === parseInt(id!, 10));
+  const { id } = useParams();
+  const { data: bookings, cancelBooking, isLoading, error } = useBookings();
+  const currentBooking = id && bookings ? bookings.find(b => b.id === parseInt(id, 10)) : null;
+
+  if (error) {
+    return <div className="p-4 text-red-500">Error loading booking details</div>;
+  }
 
   if (isLoading) {
     return (
