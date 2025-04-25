@@ -350,7 +350,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error counting unread notifications:", error);
       throw error;
     }
-  },
+  }
 
   async getNotification(id: number): Promise<Notification | undefined> {
     try {
