@@ -23,6 +23,8 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import { toast } from "@/components/ui/toast";
+
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -61,8 +63,32 @@ export default function AuthPage() {
     },
   });
 
-  const onLoginSubmit = (data: LoginData) => {
-    loginMutation.mutate(data);
+  const onLoginSubmit = async (data: LoginData) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+
+      const data = await response.json();
+      if (data.success && data.user) {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
   const onRegisterSubmit = (data: RegisterUserData) => {
@@ -132,7 +158,7 @@ export default function AuthPage() {
   const handleRoleSelect = (role: Role) => {
     // Clear any previous role-specific field errors and values
     registerForm.clearErrors();
-    
+
     // Clear previous role fields
     if (selectedRole === "admin") {
       registerForm.setValue("adminTitle", "");
@@ -143,7 +169,7 @@ export default function AuthPage() {
       registerForm.setValue("employeeId", "");
       registerForm.setValue("department", "");
     }
-    
+
     // Update the role
     setSelectedRole(role);
     registerForm.setValue("role", role);
@@ -216,7 +242,7 @@ export default function AuthPage() {
                   <li><span className="font-medium">General:</span> user@atlas.app / user123</li>
                 </ul>
               </div>
-              
+
               <div>
                 <Label htmlFor="login-email">Email Address</Label>
                 <Input
@@ -256,9 +282,9 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loginMutation.isPending}
+                disabled={loginForm.formState.isSubmitting}
               >
-                {loginMutation.isPending ? (
+                {loginForm.formState.isSubmitting ? (
                   <div className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -455,9 +481,9 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={registerMutation.isPending}
+                disabled={registerForm.formState.isSubmitting}
               >
-                {registerMutation.isPending ? (
+                {registerForm.formState.isSubmitting ? (
                   <div className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

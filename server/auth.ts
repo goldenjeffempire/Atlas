@@ -169,29 +169,47 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/auth/login', (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-      if (err) {
-        return res.status(500).json({ message: err.message });
-      }
+  app.post('/api/auth/login', async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+      const user = await storage.getUserByEmail(email);
+      
       if (!user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
-      req.logIn(user, (err) => {
+
+      passport.authenticate('local', (err, user, info) => {
         if (err) {
-          return res.status(500).json({ message: err.message });
+          return res.status(500).json({ error: err.message });
         }
-        const token = jwt.sign({ id: user.id }, JWT_SECRET, JWT_OPTIONS);
-        res.cookie('jwt', token, { 
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        if (!user) {
+          return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        
+        req.logIn(user, (err) => {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+          
+          const token = jwt.sign({ id: user.id }, JWT_SECRET, JWT_OPTIONS);
+          res.cookie('jwt', token, { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 
+          });
+          
+          const { password, ...safeUserData } = user;
+          return res.status(200).json({ 
+            success: true,
+            user: safeUserData 
+          });
         });
-        const { password, ...safeUserData } = user;
-        return res.json({ user: safeUserData });
-      });
-    })(req, res, next);
+      })(req, res, next);
+    } catch (error) {
+      console.error('Login error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   });
 
   app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
