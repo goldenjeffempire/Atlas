@@ -23,7 +23,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { toast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 
 const loginSchema = z.object({
@@ -83,6 +83,7 @@ export default function AuthPage() {
       loginMutation.mutate(userData);
       navigate('/dashboard');
     } catch (error) {
+      const { toast } = useToast();
       toast({
         title: "Login failed",
         description: (error as Error).message,
