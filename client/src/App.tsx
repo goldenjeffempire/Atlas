@@ -14,6 +14,7 @@ import AdminDashboardPage from "@/pages/admin-dashboard-page";
 import EmployeeDashboardPage from "@/pages/employee-dashboard-page";
 import GeneralDashboardPage from "@/pages/general-dashboard-page";
 import NotificationsPage from "@/pages/notifications-page";
+import ProfilePage from "@/pages/profile-page";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ChatWidget } from "./components/chat/chat-widget";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/employee" component={EmployeeDashboardPage} />
       <Route path="/general" component={GeneralDashboardPage} />
+      <Route path="/profile" component={ProfilePage} />
       <Route component={NotFound} />
     </Switch>
   );
