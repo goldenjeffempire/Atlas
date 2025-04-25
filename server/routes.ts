@@ -105,6 +105,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get workspace details
       const workspace = await storage.getWorkspace(booking.workspaceId);
 
+      // Create notification for new booking
+      await storage.createNotification({
+        userId: req.user.id,
+        title: "Booking Confirmed",
+        message: `Your booking for ${workspace?.name} has been confirmed`,
+        type: "booking_confirmation",
+        relatedBookingId: booking.id,
+        isRead: false
+      });
+
       // Create notification for booking confirmation
       await storage.createNotification({
         userId: req.user.id,
@@ -178,6 +188,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedBooking = await storage.updateBooking(bookingId, updates);
+      
+      // Create notification for booking update
+      const workspace = await storage.getWorkspace(updatedBooking.workspaceId);
+      await storage.createNotification({
+        userId: updatedBooking.userId,
+        title: updates.status === "cancelled" ? "Booking Cancelled" : "Booking Updated",
+        message: updates.status === "cancelled" 
+          ? `Your booking for ${workspace?.name} has been cancelled`
+          : `Your booking for ${workspace?.name} has been updated`,
+        type: updates.status === "cancelled" ? "booking_cancellation" : "booking_update",
+        relatedBookingId: bookingId,
+        isRead: false
+      });
+
       res.json(updatedBooking);
     } catch (error) {
       res.status(500).json({ message: "Failed to update booking" });

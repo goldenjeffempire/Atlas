@@ -4,6 +4,47 @@ import { addMinutes } from 'date-fns';
 
 // Email templates
 const templates = {
+  bookingCancellation: (data: BookingConfirmationData) => `
+    <h1>ATLAS Workspace Booking Cancellation</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Your workspace booking has been cancelled.</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>Original Start:</strong> ${data.startTime}</p>
+      <p><strong>Original End:</strong> ${data.endTime}</p>
+      <p><strong>Booking ID:</strong> ${data.bookingId}</p>
+    </div>
+    <p>You can make a new booking from your ATLAS dashboard.</p>
+  `,
+
+  bookingModification: (data: BookingConfirmationData) => `
+    <h1>ATLAS Workspace Booking Update</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Your workspace booking has been modified!</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>New Start:</strong> ${data.startTime}</p>
+      <p><strong>New End:</strong> ${data.endTime}</p>
+      <p><strong>Booking ID:</strong> ${data.bookingId}</p>
+    </div>
+    <p>You can view the updated booking details in your ATLAS dashboard.</p>
+  `,
+
+  bookingCheckInReminder: (data: BookingConfirmationData) => `
+    <h1>Time to Check In to Your Workspace</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Your booking starts in 15 minutes!</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>Start:</strong> ${data.startTime}</p>
+      <p><strong>End:</strong> ${data.endTime}</p>
+    </div>
+    <p>Please check in when you arrive at the workspace.</p>
+  `,
+
   bookingConfirmation: (data: BookingConfirmationData) => `
     <h1>Your ATLAS Workspace Booking Confirmation</h1>
     <p>Hello ${data.userName},</p>
