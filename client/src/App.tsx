@@ -11,7 +11,7 @@ import SearchResultsPage from "@/pages/search-results-page";
 import BookingDetailPage from "@/pages/booking-detail-page";
 import LandingPage from "@/pages/landing-page";
 import AdminDashboardPage from "@/pages/admin-dashboard-page";
-import EmployeeDashboardPage from "@/pages/employee-dashboard-page";
+import EnhancedEmployeeDashboardPage from "@/pages/enhanced-employee-dashboard-page";
 import GeneralDashboardPage from "@/pages/general-dashboard-page";
 import NotificationsPage from "@/pages/notifications-page";
 import ProfilePage from "@/pages/profile-page";
@@ -34,7 +34,7 @@ function DashboardRouter() {
     case "admin":
       return <AdminDashboardPage />;
     case "employee":
-      return <EmployeeDashboardPage />;
+      return <EnhancedEmployeeDashboardPage />;
     case "general":
       return <GeneralDashboardPage />;
     default:
@@ -54,7 +54,7 @@ function Router() {
       <Route path="/search/:query" component={SearchResultsPage} />
       <Route path="/notifications" component={NotificationsPage} />
       <Route path="/admin" component={AdminDashboardPage} />
-      <Route path="/employee" component={EmployeeDashboardPage} />
+      <Route path="/employee" component={EnhancedEmployeeDashboardPage} />
       <Route path="/general" component={GeneralDashboardPage} />
       <Route path="/profile" component={ProfilePage} />
       <Route component={NotFound} />
