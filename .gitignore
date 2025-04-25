@@ -4,8 +4,3 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
-
-
-
-
-How do I fix the error
