@@ -1,8 +1,9 @@
 import { 
-  users, workspaces, bookings,
+  users, workspaces, bookings, notifications,
   User, InsertUser, 
   Workspace, InsertWorkspace,
-  Booking, InsertBooking
+  Booking, InsertBooking,
+  Notification, InsertNotification
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -47,6 +48,13 @@ export interface IStorage {
   updateBooking(id: number, booking: Partial<Booking>): Promise<Booking>;
   deleteBooking(id: number): Promise<void>;
   checkWorkspaceAvailability(workspaceId: number, startTime: Date, endTime: Date, excludeBookingId?: number): Promise<boolean>;
+  
+  // Notification operations
+  getUserNotifications(userId: number): Promise<Notification[]>;
+  getNotification(id: number): Promise<Notification | undefined>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<Notification>;
+  deleteNotification(id: number): Promise<void>;
   
   // Analytics
   getAnalytics(): Promise<any>;
@@ -300,6 +308,52 @@ export class DatabaseStorage implements IStorage {
     });
     
     return overlappingBookings.length === 0;
+  }
+
+  // Notification methods
+  async getUserNotifications(userId: number): Promise<Notification[]> {
+    return db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(notifications.createdAt, "desc");
+  }
+
+  async getNotification(id: number): Promise<Notification | undefined> {
+    const [notification] = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, id));
+    return notification;
+  }
+
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db
+      .insert(notifications)
+      .values(notificationData)
+      .returning();
+    
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<Notification> {
+    const [updatedNotification] = await db
+      .update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    
+    if (!updatedNotification) {
+      throw new Error("Notification not found");
+    }
+    
+    return updatedNotification;
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db
+      .delete(notifications)
+      .where(eq(notifications.id, id));
   }
 
   // Analytics

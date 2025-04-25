@@ -1,29 +1,22 @@
-import { 
-  useQuery, 
-  useMutation, 
-  UseMutationResult, 
-  useQueryClient 
-} from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Notification, InsertNotification } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function useNotifications() {
   return useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
-    refetchInterval: 60000, // Refresh every minute
+    staleTime: 10 * 1000, // 10 seconds
   });
 }
 
 export function useCreateNotification() {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (notificationData: InsertNotification) => {
       const res = await apiRequest("POST", "/api/notifications", notificationData);
-      const data = await res.json();
-      return data;
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
@@ -39,13 +32,10 @@ export function useCreateNotification() {
 }
 
 export function useMarkNotificationAsRead() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (notificationId: number) => {
-      const res = await apiRequest("PATCH", `/api/notifications/${notificationId}/read`, {});
-      const data = await res.json();
-      return data;
+      const res = await apiRequest("PATCH", `/api/notifications/${notificationId}/read`);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
@@ -54,14 +44,14 @@ export function useMarkNotificationAsRead() {
 }
 
 export function useDismissNotification() {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (notificationId: number) => {
-      const res = await apiRequest("DELETE", `/api/notifications/${notificationId}`, {});
-      await res.json();
-      return notificationId;
+      const res = await apiRequest("DELETE", `/api/notifications/${notificationId}`);
+      if (!res.ok) {
+        throw new Error("Failed to dismiss notification");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
@@ -79,7 +69,7 @@ export function useDismissNotification() {
 export function useUnreadNotificationsCount() {
   const { data: notifications } = useNotifications();
   
-  if (!notifications) return 0;
+  const unreadCount = notifications?.filter(notification => !notification.read).length || 0;
   
-  return notifications.filter(notification => !notification.isRead).length;
+  return unreadCount;
 }
