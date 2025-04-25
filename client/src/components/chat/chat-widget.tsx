@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ChatMessageItem } from './chat-message';
 import { ChatInput } from './chat-input';
-import { useChat } from '@/hooks/use-chat';
+import { useChat, ChatMessage, ChatRole } from '@/hooks/use-chat';
 import { Loader2 } from 'lucide-react';
 
 export function ChatWidget() {
@@ -32,16 +32,17 @@ export function ChatWidget() {
     setIsMinimized(!isMinimized);
   };
 
-  // Add a welcome message when chat is opened but don't auto-send to API
-  useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      const welcomeMessage: ChatMessage = { 
-        role: 'assistant', 
-        content: 'Hello! I am ATLAS Assistant. How can I help you with workspace bookings, account management, or other workspace-related questions?' 
-      };
-      setMessages([welcomeMessage]);
-    }
-  }, [isOpen, messages.length]);
+  // We'll handle the welcome message differently
+  // No need to use setMessages from an effect since it would cause an infinite loop
+  const showInitialMessage = isOpen && messages.length === 0;
+  
+  // Add initial messages if needed (only referenced, not changing state in effect)
+  const displayMessages = showInitialMessage ? 
+    [{ 
+      role: 'assistant' as ChatRole, 
+      content: 'Hello! I am ATLAS Assistant. How can I help you with workspace bookings, account management, or other workspace-related questions?' 
+    }] : 
+    messages;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
@@ -88,7 +89,7 @@ export function ChatWidget() {
             {/* Messages area */}
             {!isMinimized && (
               <div className="flex-1 overflow-y-auto p-3 space-y-4">
-                {messages.map((message, i) => (
+                {displayMessages.map((message, i) => (
                   <ChatMessageItem 
                     key={i} 
                     message={message} 
