@@ -222,11 +222,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const userId = req.user!.id;
-      const notifications = await storage.getUserNotifications(userId);
+      
+      // Support query parameters for filtering
+      const { limit, unreadOnly } = req.query;
+      const options: { limit?: number; unreadOnly?: boolean } = {};
+      
+      if (limit) {
+        options.limit = parseInt(limit as string);
+      }
+      
+      if (unreadOnly === 'true') {
+        options.unreadOnly = true;
+      }
+      
+      const notifications = await storage.getUserNotifications(userId, options);
       res.json(notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/count", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUnreadNotificationsCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error counting notifications:", error);
+      res.status(500).json({ message: "Failed to count notifications" });
     }
   });
 
@@ -237,6 +265,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const validatedData = insertNotificationSchema.parse(req.body);
+      
+      // Check if user is allowed to create notifications for the specified user
+      if (validatedData.userId !== req.user!.id && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "You can only create notifications for your own account" });
+      }
+      
       const notification = await storage.createNotification(validatedData);
       res.status(201).json(notification);
     } catch (error) {
@@ -263,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Notification not found" });
       }
       
-      if (notification.userId !== userId) {
+      if (notification.userId !== userId && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -272,6 +306,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error marking notification as read:", error);
       res.status(500).json({ message: "Failed to update notification" });
+    }
+  });
+
+  app.patch("/api/notifications/mark-all-read", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user!.id;
+      const updatedCount = await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: `Marked ${updatedCount} notifications as read`, count: updatedCount });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to update notifications" });
     }
   });
 
@@ -290,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Notification not found" });
       }
       
-      if (notification.userId !== userId) {
+      if (notification.userId !== userId && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -299,6 +348,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting notification:", error);
       res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
+  app.delete("/api/notifications", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user!.id;
+      const { readOnly } = req.query;
+      
+      let deletedCount;
+      if (readOnly === 'true') {
+        deletedCount = await storage.deleteReadNotifications(userId);
+      } else {
+        deletedCount = await storage.deleteAllUserNotifications(userId);
+      }
+      
+      res.status(200).json({ 
+        message: `Successfully deleted ${deletedCount} notifications`,
+        count: deletedCount
+      });
+    } catch (error) {
+      console.error("Error deleting all notifications:", error);
+      res.status(500).json({ message: "Failed to delete notifications" });
     }
   });
 
