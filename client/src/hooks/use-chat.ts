@@ -27,10 +27,19 @@ export function useChat() {
 
   const chatMutation = useMutation({
     mutationFn: async (messages: ChatMessage[]) => {
-      const res = await apiRequest('POST', '/api/chat', { messages });
-      return await res.json() as ChatResponse;
+      try {
+        console.log('Sending chat messages:', messages);
+        const res = await apiRequest('POST', '/api/chat', { messages });
+        const data = await res.json() as ChatResponse;
+        console.log('Chat response received:', data);
+        return data;
+      } catch (error) {
+        console.error('Chat mutation error:', error);
+        throw error;
+      }
     },
     onError: (error: Error) => {
+      console.error('Chat error in onError handler:', error);
       toast({
         title: 'Chat Error',
         description: error.message || 'Failed to get a response',

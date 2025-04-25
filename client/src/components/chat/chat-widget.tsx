@@ -32,10 +32,14 @@ export function ChatWidget() {
     setIsMinimized(!isMinimized);
   };
 
-  // Welcome message when chat is opened and no messages exist
+  // Add a welcome message when chat is opened but don't auto-send to API
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      sendMessage('Hi there! I need help with ATLAS.');
+      const welcomeMessage: ChatMessage = { 
+        role: 'assistant', 
+        content: 'Hello! I am ATLAS Assistant. How can I help you with workspace bookings, account management, or other workspace-related questions?' 
+      };
+      setMessages([welcomeMessage]);
     }
   }, [isOpen, messages.length]);
 
