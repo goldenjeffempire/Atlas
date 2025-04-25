@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useBooking } from '@/hooks/use-booking';
+import { useBookings } from '@/hooks/use-booking';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import { format } from 'date-fns';
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { booking, cancelBooking, isLoading } = useBooking(parseInt(id!, 10));
+  const { data: booking, cancelBooking, isLoading } = useBookings();
+  const currentBooking = booking?.find(b => b.id === parseInt(id!, 10));
 
   if (isLoading) {
     return (
