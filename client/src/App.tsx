@@ -23,9 +23,9 @@ import { ChatWidget } from "./components/chat-widget";
 // Role-based dashboard routing
 function DashboardRouter() {
   const { user } = useAuth();
-  
+
   if (!user) return <DashboardPage />;
-  
+
   switch (user.role) {
     case "admin":
       return <AdminDashboardPage />;
@@ -44,27 +44,27 @@ function DashboardRouter() {
 function Router() {
   const { user } = useAuth();
   const [location] = useLocation();
-  
+
   // Redirect user to appropriate dashboard after login if they're on the landing page
   useEffect(() => {
     if (user && location === "/") {
       window.location.href = "/dashboard";
     }
   }, [user, location]);
-  
+
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/dashboard" component={DashboardRouter} />
-      
+
       {/* Common protected routes for all users */}
       <ProtectedRoute path="/workspaces" component={WorkspacesPage} />
       <ProtectedRoute path="/workspaces/:id/book" component={BookingDetailPage} />
       <ProtectedRoute path="/search/:query" component={SearchResultsPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
-      
+
       {/* Role-specific routes */}
       <ProtectedRoute 
         path="/admin" 
@@ -87,7 +87,9 @@ function Router() {
           return <GeneralDashboardPage />;
         }} 
       />
-      
+
+      <Route path="/about" component={AboutPage} />
+      <Route path="/support" component={SupportPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -113,8 +115,13 @@ function ChatWidgetContainer() {
   const [location] = useLocation();
   // Hide chat widget on landing page
   if (location === "/") return null;
-  
+
   return <ChatWidget />;
 }
 
 export default App;
+
+
+// Placeholder components -  Replace with actual implementations
+function AboutPage() { return <div>About Us</div> }
+function SupportPage() { return <div>Support</div> }
