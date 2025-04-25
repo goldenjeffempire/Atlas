@@ -5,8 +5,7 @@ import { setupAuth } from "./auth";
 import { z } from "zod";
 import { insertBookingSchema, insertWorkspaceSchema } from "@shared/schema";
 import { sendBookingConfirmation } from "./mailer";
-import { handleChatRequest as handleOpenAIChatRequest } from "./openai";
-import { handleChatRequest as handlePerplexityChatRequest } from "./perplexity";
+import { handleChatRequest } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes (login, register, logout, user)
@@ -215,34 +214,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // AI Chat endpoint with fallback mechanism
+  // AI Chat endpoint using OpenAI
   app.post("/api/chat", async (req, res) => {
     try {
-      // Check if OpenAI API key is available and try it first
-      if (process.env.OPENAI_API_KEY) {
-        try {
-          return await handleOpenAIChatRequest(req, res);
-        } catch (openaiError) {
-          console.error('OpenAI API failed, attempting fallback to Perplexity:', openaiError);
-          // Fall through to Perplexity if OpenAI fails
-        }
+      // Check if OpenAI API key is available
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(503).json({ 
+          error: 'AI service unavailable, please configure OpenAI API key',
+          choices: [{
+            message: {
+              role: 'assistant',
+              content: 'Sorry, the AI assistant is currently unavailable. Please try again later.'
+            }
+          }]
+        });
       }
       
-      // Try Perplexity as a fallback or primary if OpenAI is not available
-      if (process.env.PERPLEXITY_API_KEY) {
-        return await handlePerplexityChatRequest(req, res);
-      }
-      
-      // If neither API key is available, return an error
-      return res.status(503).json({ 
-        error: 'AI service unavailable, please configure API keys',
-        choices: [{
-          message: {
-            role: 'assistant',
-            content: 'Sorry, the AI assistant is currently unavailable. Please try again later.'
-          }
-        }]
-      });
+      // Use OpenAI for chat responses
+      return await handleChatRequest(req, res);
     } catch (error) {
       console.error('Chat endpoint error:', error);
       return res.status(500).json({ error: 'Failed to process chat request' });
