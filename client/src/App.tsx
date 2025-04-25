@@ -21,11 +21,6 @@ import { ChatWidget } from "./components/chat/chat-widget";
 
 // Role-based dashboard routing
 function DashboardRouter() {
-  // For demonstration purposes, always show the admin dashboard
-  return <AdminDashboardPage />;
-  
-  // Commented out for demo purposes
-  /*
   const { user } = useAuth();
   
   if (!user) return <DashboardPage />;
@@ -40,7 +35,6 @@ function DashboardRouter() {
     default:
       return <DashboardPage />;
   }
-  */
 }
 
 function Router() {
