@@ -17,7 +17,7 @@ export default function BookingDetailPage() {
     return <div className="p-4 text-red-500">Error loading booking details</div>;
   }
 
-  if (isLoading) {
+  if (isLoading || !currentBooking) {
     return (
       <div className="container mx-auto p-6">
         <Card className="animate-pulse">
@@ -54,14 +54,14 @@ export default function BookingDetailPage() {
         <CardContent className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-semibold mb-2">{booking.workspace.name}</h2>
+              <h2 className="text-2xl font-semibold mb-2">{currentBooking.workspace.name}</h2>
               <div className="flex items-center text-gray-600 mb-4">
                 <MapPin className="w-4 h-4 mr-2" />
-                <span>{booking.workspace.location}</span>
+                <span>{currentBooking.workspace.location}</span>
               </div>
             </div>
-            <Badge variant={booking.status === 'confirmed' ? 'success' : 'secondary'}>
-              {booking.status}
+            <Badge variant={currentBooking.status === 'confirmed' ? 'success' : 'secondary'}>
+              {currentBooking.status}
             </Badge>
           </div>
 
@@ -72,18 +72,18 @@ export default function BookingDetailPage() {
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2 text-gray-500" />
                   <span>
-                    {format(new Date(booking.startTime), 'PPP')} - {format(new Date(booking.endTime), 'PPP')}
+                    {format(new Date(currentBooking.startTime), 'PPP')} - {format(new Date(currentBooking.endTime), 'PPP')}
                   </span>
                 </div>
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 mr-2 text-gray-500" />
                   <span>
-                    {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
+                    {format(new Date(currentBooking.startTime), 'p')} - {format(new Date(currentBooking.endTime), 'p')}
                   </span>
                 </div>
                 <div className="flex items-center">
                   <Users className="w-4 h-4 mr-2 text-gray-500" />
-                  <span>{booking.attendees} attendees</span>
+                  <span>{currentBooking.attendees} attendees</span>
                 </div>
               </div>
             </div>
@@ -91,7 +91,7 @@ export default function BookingDetailPage() {
             <div>
               <h3 className="text-lg font-medium mb-3">Features</h3>
               <div className="flex flex-wrap gap-2">
-                {booking.workspace.features.map((feature, index) => (
+                {currentBooking.workspace.features.map((feature, index) => (
                   <Badge key={index} variant="outline">
                     {feature}
                   </Badge>
@@ -103,7 +103,7 @@ export default function BookingDetailPage() {
           <div className="mt-6 flex justify-end">
             <Button
               variant="destructive"
-              onClick={() => cancelBooking(booking.id)}
+              onClick={() => cancelBooking(currentBooking.id)}
               className="flex items-center"
             >
               <X className="w-4 h-4 mr-2" />
