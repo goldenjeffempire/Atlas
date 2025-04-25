@@ -170,15 +170,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/auth/login', async (req, res, next) => {
-    try {
-      const { email, password } = req.body;
-      const user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      passport.authenticate('local', (err, user, info) => {
+    passport.authenticate('local', async (err, user, info) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }

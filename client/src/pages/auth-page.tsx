@@ -71,18 +71,17 @@ export default function AuthPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
+        credentials: 'include'
       });
 
-      const responseData = await response.json();
-
       if (!response.ok) {
-        throw new Error(responseData.error || 'Login failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Invalid credentials');
       }
 
-      if (responseData.success) {
-        loginMutation.mutate(responseData.user);
-        navigate('/dashboard');
-      }
+      const userData = await response.json();
+      loginMutation.mutate(userData);
+      navigate('/dashboard');
     } catch (error) {
       toast({
         title: "Login failed",
