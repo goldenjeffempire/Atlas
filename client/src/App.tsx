@@ -18,7 +18,7 @@ import NotificationsPage from "@/pages/notifications-page";
 import ProfilePage from "@/pages/profile-page";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
-import { ChatWidget } from "./components/chat/chat-widget";
+import { ChatWidget } from "./components/chat-widget";
 
 // Role-based dashboard routing
 function DashboardRouter() {
