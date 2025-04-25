@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { z } from "zod";
 import { insertBookingSchema, insertWorkspaceSchema } from "@shared/schema";
 import { sendBookingConfirmation } from "./mailer";
-import { handleChatRequest } from "./perplexity";
+import { handleChatRequest } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes (login, register, logout, user)
