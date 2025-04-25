@@ -78,7 +78,13 @@ export default function BookingDetailPage() {
       workspaceId: workspace.id,
       startTime: startDateTime.toISOString(),
       endTime: endDateTime.toISOString(),
-      status: "confirmed"
+      status: "confirmed",
+      title: `Booking for ${workspace.name}`,
+      description: "Regular workspace booking",
+      participants: null, // Add empty participants
+      paymentStatus: "unpaid",
+      amount: workspace.hourlyRate ? 
+        Math.round((endDateTime.getTime() - startDateTime.getTime()) / 3600000) * workspace.hourlyRate : 0
     });
   };
   
