@@ -73,13 +73,14 @@ export default function AuthPage() {
         body: JSON.stringify(data),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
+        throw new Error(responseData.error || 'Login failed');
       }
 
-      const data = await response.json();
-      if (data.success && data.user) {
+      if (responseData.success) {
+        loginMutation.mutate(responseData.user);
         navigate('/dashboard');
       }
     } catch (error) {
