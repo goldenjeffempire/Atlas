@@ -89,18 +89,22 @@ export class DatabaseStorage implements IStorage {
 
       // Create test users if they don't exist
       if (!adminUser) {
-        // Use a simple, consistent password hash for test users
-        const hashedPassword = 'test1234_hash';
+        // Use bcrypt or similar for password hashing in production
+        const salt = randomBytes(16).toString('hex');
+        const hashedPassword = await scryptAsync('admin123', salt, 64) as Buffer;
+        const adminHashedPassword = `${hashedPassword.toString('hex')}.${salt}`;
 
         // Create superuser/admin
         await this.createUser({
           email: 'admin@atlas.app',
-          password: 'admin123',
+          password: adminHashedPassword,
+          name: 'System Administrator',
           companyName: 'ATLAS Admin',
           role: 'admin',
           adminTitle: 'System Administrator',
           adminDepartment: 'IT Operations',
-          isActive: true
+          isActive: true,
+          verified: true
         });
 
         // Create employee user
