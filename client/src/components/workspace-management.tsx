@@ -164,11 +164,14 @@ export function WorkspaceManagement() {
 
   // Handle form submission
   const onSubmit = (values: WorkspaceFormValues) => {
+    // Create a clean features object without any undefined or null values
+    const features = values.features || {};
+    
     const workspaceData = {
       ...values,
       // Add computed fields or transformations
       features: {
-        ...values.features,
+        ...features,
         organization: values.organization, // Store organization as a feature
       },
     };
@@ -190,8 +193,8 @@ export function WorkspaceManagement() {
     setSelectedWorkspace(workspace);
     
     // Parse features from workspace
-    const workspaceFeatures = workspace.features as Record<string, boolean> || {};
-    const organization = (workspaceFeatures.organization as unknown as string) || "atlas";
+    const workspaceFeatures = workspace.features ? { ...(workspace.features as any) } : {};
+    const organization = workspaceFeatures.organization ? String(workspaceFeatures.organization) : "atlas";
     
     // Remove organization from features to avoid duplication
     const features = { ...workspaceFeatures };
@@ -334,7 +337,7 @@ export function WorkspaceManagement() {
                 <CardTitle className="text-lg flex items-center justify-between">
                   {workspace.name}
                   {(workspace.hourlyRate ?? 0) > 0 && (
-                    <span className="text-sm font-normal">${workspace.hourlyRate}/hr</span>
+                    <span className="text-sm font-normal">${workspace.hourlyRate ?? 0}/hr</span>
                   )}
                 </CardTitle>
                 <CardDescription>
@@ -351,24 +354,31 @@ export function WorkspaceManagement() {
                 </div>
                 
                 <div className="mt-3 flex flex-wrap gap-1">
-                  {workspace.features && Object.entries(workspace.features as Record<string, boolean>)
-                    .filter(([key, value]) => value === true && key !== 'organization')
-                    .slice(0, 3)
-                    .map(([key]) => (
+                  {(() => {
+                    if (!workspace.features) return null;
+                    
+                    const featureEntries = Object.entries(workspace.features as any);
+                    const filteredFeatures = featureEntries.filter(
+                      ([key, value]) => value === true && key !== 'organization'
+                    );
+                    
+                    const displayFeatures = filteredFeatures.slice(0, 3).map(([key]) => (
                       <Badge key={key} variant="outline" className="text-xs">
                         {key.replace('has_', '').replace('is_', '').replace(/_/g, ' ')}
                       </Badge>
-                    ))
-                  }
-                  {workspace.features && 
-                   Object.entries(workspace.features as Record<string, boolean>)
-                     .filter(([key, value]) => value === true && key !== 'organization').length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{Object.entries(workspace.features as Record<string, boolean>)
-                          .filter(([key, value]) => value === true && key !== 'organization').length - 3} 
-                      more
-                    </Badge>
-                  )}
+                    ));
+                    
+                    const moreFeaturesBadge = filteredFeatures.length > 3 ? (
+                      <Badge key="more" variant="outline" className="text-xs">
+                        +{filteredFeatures.length - 3} more
+                      </Badge>
+                    ) : null;
+                    
+                    return <>
+                      {displayFeatures}
+                      {moreFeaturesBadge}
+                    </>;
+                  })()}
                 </div>
               </CardContent>
               
