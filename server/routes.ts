@@ -5,7 +5,8 @@ import { setupAuth } from "./auth";
 import { z } from "zod";
 import { insertBookingSchema, insertWorkspaceSchema } from "@shared/schema";
 import { sendBookingConfirmation } from "./mailer";
-import { handleChatRequest } from "./openai";
+import { handleChatRequest as handleOpenAIChatRequest } from "./openai";
+import { handleChatRequest as handlePerplexityChatRequest } from "./perplexity";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes (login, register, logout, user)
@@ -214,8 +215,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // AI Chat endpoint
-  app.post("/api/chat", handleChatRequest);
+  // AI Chat endpoint with fallback mechanism
+  app.post("/api/chat", async (req, res) => {
+    try {
+      // Check if OpenAI API key is available and try it first
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          return await handleOpenAIChatRequest(req, res);
+        } catch (openaiError) {
+          console.error('OpenAI API failed, attempting fallback to Perplexity:', openaiError);
+          // Fall through to Perplexity if OpenAI fails
+        }
+      }
+      
+      // Try Perplexity as a fallback or primary if OpenAI is not available
+      if (process.env.PERPLEXITY_API_KEY) {
+        return await handlePerplexityChatRequest(req, res);
+      }
+      
+      // If neither API key is available, return an error
+      return res.status(503).json({ 
+        error: 'AI service unavailable, please configure API keys',
+        choices: [{
+          message: {
+            role: 'assistant',
+            content: 'Sorry, the AI assistant is currently unavailable. Please try again later.'
+          }
+        }]
+      });
+    } catch (error) {
+      console.error('Chat endpoint error:', error);
+      return res.status(500).json({ error: 'Failed to process chat request' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
