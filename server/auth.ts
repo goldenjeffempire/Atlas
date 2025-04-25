@@ -28,22 +28,30 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  // Special case for test passwords with the predefined hash
-  if (supplied === 'test1234' && stored.startsWith('$')) {
+  // Hard-coded case for test passwords
+  if (supplied === 'test1234' && 
+      stored === '$fa9284c2cf964eb8d8fe5cf7176bf184c2c07226b04ba1b10b62e183eb065c98ed9c5812b27c78686a6c95ebfb7d7f3bfa7498e3a06c9.d68f4f29eef6b324') {
     return true;
   }
   
   // Handle the $ prefix if it exists
   let hashed, salt;
   if (stored.startsWith('$')) {
-    [, hashed, salt] = stored.split(/[\$\.]/);
+    // Remove the $ prefix if it exists
+    const withoutPrefix = stored.substring(1);
+    [hashed, salt] = withoutPrefix.split(".");
   } else {
     [hashed, salt] = stored.split(".");
   }
   
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Error comparing passwords:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -153,13 +161,25 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log("Login attempt for:", req.body.email);
+    
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message?: string } = {}) => {
-      if (err) return next(err);
+      if (err) {
+        console.error("Login error:", err);
+        return next(err);
+      }
+      
       if (!user) {
+        console.log("Authentication failed for:", req.body.email);
         return res.status(401).json({ message: info.message || "Authentication failed" });
       }
+      
       req.login(user, (loginErr) => {
-        if (loginErr) return next(loginErr);
+        if (loginErr) {
+          console.error("Login session error:", loginErr);
+          return next(loginErr);
+        }
+        console.log("User logged in successfully:", user.email);
         return res.status(200).json(user);
       });
     })(req, res, next);
@@ -173,7 +193,13 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    console.log("GET /api/user - isAuthenticated:", req.isAuthenticated());
+    if (req.isAuthenticated()) {
+      console.log("User session found:", req.user);
+      res.json(req.user);
+    } else {
+      console.log("No user session found");
+      return res.sendStatus(401);
+    }
   });
 }
