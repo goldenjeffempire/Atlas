@@ -70,10 +70,46 @@ export class DatabaseStorage implements IStorage {
 
   private async initializeSampleData() {
     try {
-      // Check if we already have workspaces
+      // Check if we already have workspaces and users
       const existingWorkspaces = await this.getWorkspaces();
+      const adminUser = await this.getUserByEmail('admin@atlas.com');
       
-      // Only initialize if there are no workspaces
+      // Create test users if they don't exist
+      if (!adminUser) {
+        // Create hashed passwords
+        const hashedPassword = '$fa9284c2cf964eb8d8fe5cf7176bf184c2c07226b04ba1b10b62e183eb065c98ed9c5812b27c78686a6c95ebfb7d7f3bfa7498e3a06c9.d68f4f29eef6b324';
+
+        // Create admin user
+        await this.createUser({
+          email: 'admin@atlas.com',
+          password: hashedPassword,
+          companyName: 'ATLAS Admin',
+          role: 'admin',
+          adminTitle: 'Facility Manager',
+          adminDepartment: 'Operations'
+        });
+        
+        // Create employee user
+        await this.createUser({
+          email: 'employee@atlas.com',
+          password: hashedPassword, 
+          companyName: 'ATLAS Corp',
+          role: 'employee',
+          employeeId: 'EMP001',
+          department: 'Engineering'
+        });
+        
+        // Create general user
+        await this.createUser({
+          email: 'user@atlas.com',
+          password: hashedPassword,
+          companyName: 'ATLAS User',
+          role: 'general',
+          jobTitle: 'Contractor'
+        });
+      }
+      
+      // Only initialize workspaces if there are none
       if (existingWorkspaces.length === 0) {
         const workspaceTypes = ["desk", "meeting_room", "collaborative_space", "private_office", "focus_pod"];
         const locations = ["North Wing, Floor 4", "East Wing, Floor 2", "West Wing, Floor 3", "South Wing, Floor 1", "East Wing, Floor 5"];
