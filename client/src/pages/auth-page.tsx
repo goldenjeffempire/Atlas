@@ -211,9 +211,9 @@ export default function AuthPage() {
               <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 mb-4 rounded-md text-sm">
                 <p className="font-medium">Demo Accounts:</p>
                 <ul className="text-xs mt-1 space-y-1">
-                  <li><span className="font-medium">Admin:</span> admin@atlas.com / test1234</li>
-                  <li><span className="font-medium">Employee:</span> employee@atlas.com / test1234</li>
-                  <li><span className="font-medium">General:</span> user@atlas.com / test1234</li>
+                  <li><span className="font-medium">Admin:</span> admin@atlas.app / admin123</li>
+                  <li><span className="font-medium">Employee:</span> employee@atlas.app / employee123</li>
+                  <li><span className="font-medium">General:</span> user@atlas.app / user123</li>
                 </ul>
               </div>
               
