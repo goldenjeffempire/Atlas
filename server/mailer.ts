@@ -1,4 +1,3 @@
-
 import nodemailer from 'nodemailer';
 import { addMinutes } from 'date-fns';
 
@@ -58,7 +57,7 @@ const templates = {
     </div>
     <p>You can manage your booking from your ATLAS dashboard.</p>
   `,
-  
+
   bookingReminder: (data: BookingConfirmationData) => `
     <h1>Upcoming Workspace Booking Reminder</h1>
     <p>Hello ${data.userName},</p>
@@ -72,7 +71,7 @@ const templates = {
     <p>We look forward to seeing you!</p>
   `,
 
-  bookingCancellation: (data: BookingConfirmationData) => `
+  bookingCancellation2: (data: BookingConfirmationData) => `
     <h1>Workspace Booking Cancellation</h1>
     <p>Hello ${data.userName},</p>
     <p>Your workspace booking has been cancelled:</p>
@@ -85,7 +84,7 @@ const templates = {
     <p>If you did not request this cancellation, please contact support.</p>
   `,
 
-  bookingModification: (data: BookingConfirmationData) => `
+  bookingModification2: (data: BookingConfirmationData) => `
     <h1>Workspace Booking Updated</h1>
     <p>Hello ${data.userName},</p>
     <p>Your workspace booking has been modified:</p>
@@ -96,31 +95,29 @@ const templates = {
       <p><strong>New End:</strong> ${data.endTime}</p>
     </div>
     <p>If you did not make these changes, please contact support immediately.</p>
-  `
-    <h1>Your ATLAS Workspace Booking Confirmation</h1>
-    <p>Hello ${data.userName},</p>
-    <p>Your workspace booking has been confirmed!</p>
-    <div style="margin: 20px 0;">
-      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
-      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
-      <p><strong>Start:</strong> ${data.startTime}</p>
-      <p><strong>End:</strong> ${data.endTime}</p>
-      <p><strong>Booking ID:</strong> ${data.bookingId}</p>
-    </div>
-    <p>You can manage your booking from your ATLAS dashboard.</p>
   `,
-  
-  bookingReminder: (data: BookingConfirmationData) => `
-    <h1>Upcoming Workspace Booking Reminder</h1>
+  verifyEmail: (data: EmailVerificationData) => `
+    <h1>Welcome to ATLAS - Verify Your Email</h1>
     <p>Hello ${data.userName},</p>
-    <p>This is a reminder about your upcoming workspace booking:</p>
-    <div style="margin: 20px 0;">
-      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
-      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
-      <p><strong>Start:</strong> ${data.startTime}</p>
-      <p><strong>End:</strong> ${data.endTime}</p>
-    </div>
-    <p>We look forward to seeing you!</p>
+    <p>Please verify your email by clicking the link below:</p>
+    <a href="${data.verificationLink}">Verify Email</a>
+    <p>This link will expire in 24 hours.</p>
+  `,
+
+  resetPassword: (data: PasswordResetData) => `
+    <h1>ATLAS Password Reset</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Click the link below to reset your password:</p>
+    <a href="${data.resetLink}">Reset Password</a>
+    <p>This link will expire in 1 hour.</p>
+  `,
+
+  organizationInvite: (data: OrganizationInviteData) => `
+    <h1>Join ${data.organizationName} on ATLAS</h1>
+    <p>Hello,</p>
+    <p>You've been invited to join ${data.organizationName} on ATLAS.</p>
+    <p>Click below to accept the invitation:</p>
+    <a href="${data.inviteLink}">Accept Invitation</a>
   `
 };
 
@@ -131,6 +128,21 @@ interface BookingConfirmationData {
   startTime: string;
   endTime: string;
   bookingId: string;
+}
+
+interface EmailVerificationData {
+  userName: string;
+  verificationLink: string;
+}
+
+interface PasswordResetData {
+  userName: string;
+  resetLink: string;
+}
+
+interface OrganizationInviteData {
+  organizationName: string;
+  inviteLink: string;
 }
 
 // For development, log emails instead of sending
@@ -180,4 +192,28 @@ export async function sendBookingConfirmation(email: string, data: BookingConfir
       );
     }, reminderTime.getTime() - Date.now());
   }
+}
+
+export async function sendVerificationEmail(data: EmailVerificationData) {
+  await sendEmail(
+    data.userName,
+    'Verify Your ATLAS Account',
+    templates.verifyEmail(data)
+  );
+}
+
+export async function sendPasswordResetEmail(data: PasswordResetData) {
+  await sendEmail(
+    data.userName,
+    'Reset Your ATLAS Password',
+    templates.resetPassword(data)
+  );
+}
+
+export async function sendOrganizationInvite(to: string, data: OrganizationInviteData) {
+  await sendEmail(
+    to,
+    `Join ${data.organizationName} on ATLAS`,
+    templates.organizationInvite(data)
+  );
 }

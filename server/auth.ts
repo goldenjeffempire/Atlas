@@ -3,108 +3,117 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
 import { sign, verify } from "jsonwebtoken";
-import { createTransport } from "nodemailer";
-import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
-
-declare global {
-  namespace Express {
-    interface User extends SelectUser {}
-  }
-}
+import { User } from "@shared/schema";
+import type { Express } from "express";
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
-  // For test users, use a simple fixed hash
-  if (password === 'test1234') {
-    return 'test1234_hash';
-  }
-  
-  // For normal usage, create a random salt
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  console.log("Comparing passwords:", { supplied, stored });
-  
-  // Special case for test users with the simplified hash format
-  if (supplied === 'test1234' && stored === 'test1234_hash') {
-    console.log("Test password matches!");
-    return true;
-  }
-  
-  // If we have a regular hashed password
-  try {
-    // Handle the $ prefix if it exists
-    let hashed, salt;
-    if (stored.startsWith('$')) {
-      // Remove the $ prefix if it exists
-      const withoutPrefix = stored.substring(1);
-      [hashed, salt] = withoutPrefix.split(".");
-    } else {
-      [hashed, salt] = stored.split(".");
-    }
-    
-    if (!salt) {
-      console.error("Invalid password format - no salt found");
-      return false;
-    }
-    
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
-  } catch (error) {
-    console.error("Error comparing passwords:", error);
-    return false;
+declare global {
+  namespace Express {
+    interface User extends User {}
   }
 }
 
 export function setupAuth(app: Express) {
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "atlas-workspace-booking-secret",
+  // JWT Secret
+  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+  // Session setup
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'session-secret',
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
     cookie: {
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
-  };
+  }));
 
-  app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.use(
-    new LocalStrategy(
-      { usernameField: "email" },
-      async (email, password, done) => {
-        try {
-          const user = await storage.getUserByEmail(email);
-          if (!user || !(await comparePasswords(password, user.password))) {
-            return done(null, false, { message: "Invalid email or password" });
-          } else {
-            // Remove password field from the user object for security
-            const { password: _, ...userWithoutPassword } = user;
-            return done(null, userWithoutPassword as SelectUser);
-          }
-        } catch (error) {
-          return done(error);
-        }
-      }
-    )
-  );
+  // Local Strategy
+  passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    try {
+      const user = await storage.getUserByEmail(email);
+      if (!user) return done(null, false);
 
-  passport.serializeUser((user, done) => done(null, user.id));
+      const [hashedPassword, salt] = user.password.split('.');
+      const hashedBuffer = await scryptAsync(password, salt, 64) as Buffer;
+      const storedHashedBuffer = Buffer.from(hashedPassword, 'hex');
+
+      if (!timingSafeEqual(hashedBuffer, storedHashedBuffer)) {
+        return done(null, false);
+      }
+
+      return done(null, user);
+    } catch (error) {
+      return done(error);
+    }
+  }));
+
+  // Google OAuth Strategy
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/auth/google/callback"
+    }, async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await storage.getUserByEmail(profile.emails![0].value);
+
+        if (!user) {
+          user = await storage.createUser({
+            email: profile.emails![0].value,
+            name: profile.displayName,
+            googleId: profile.id,
+            role: 'general'
+          });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }));
+  }
+
+  // LinkedIn OAuth Strategy
+  if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+    passport.use(new LinkedInStrategy({
+      clientID: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      callbackURL: "/auth/linkedin/callback",
+      scope: ['r_emailaddress', 'r_liteprofile']
+    }, async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await storage.getUserByEmail(profile.emails![0].value);
+
+        if (!user) {
+          user = await storage.createUser({
+            email: profile.emails![0].value,
+            name: profile.displayName,
+            linkedinId: profile.id,
+            role: 'general'
+          });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }));
+  }
+
+  passport.serializeUser((user: Express.User, done) => {
+    done(null, user.id);
+  });
+
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -114,104 +123,71 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  // Auth routes
+  app.post('/api/auth/register', async (req, res) => {
     try {
-      const { 
-        email, 
-        password, 
-        role, 
-        companyName, 
-        phoneNumber,
-        // Role-specific fields
-        adminTitle,
-        adminDepartment,
-        jobTitle,
-        employeeId,
-        department
-      } = req.body;
-      
+      const { email, password, name, role } = req.body;
+
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
+        return res.status(400).json({ message: 'Email already registered' });
       }
 
-      // Create user data object with common fields
-      const userData = {
+      const salt = randomBytes(16).toString('hex');
+      const hashedBuffer = await scryptAsync(password, salt, 64) as Buffer;
+      const hashedPassword = `${hashedBuffer.toString('hex')}.${salt}`;
+
+      const user = await storage.createUser({
         email,
-        password: await hashPassword(password),
+        password: hashedPassword,
+        name,
         role,
-        companyName,
-        phoneNumber
-      };
-
-      // Add role-specific fields based on the role
-      if (role === 'admin') {
-        Object.assign(userData, {
-          adminTitle,
-          adminDepartment
-        });
-      } else if (role === 'general') {
-        Object.assign(userData, {
-          jobTitle
-        });
-      } else if (role === 'employee') {
-        Object.assign(userData, {
-          employeeId,
-          department
-        });
-      }
-
-      const user = await storage.createUser(userData);
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
+        verified: false
       });
+
+      // Send verification email
+      // TODO: Implement verification email sending
+
+      res.json({ message: 'Registration successful' });
     } catch (error) {
-      next(error);
+      res.status(500).json({ message: 'Registration failed' });
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    console.log("Login attempt for:", req.body.email);
-    
-    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message?: string } = {}) => {
-      if (err) {
-        console.error("Login error:", err);
-        return next(err);
-      }
-      
-      if (!user) {
-        console.log("Authentication failed for:", req.body.email);
-        return res.status(401).json({ message: info.message || "Authentication failed" });
-      }
-      
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error("Login session error:", loginErr);
-          return next(loginErr);
-        }
-        console.log("User logged in successfully:", user.email);
-        return res.status(200).json(user);
-      });
-    })(req, res, next);
+  app.post('/api/auth/login', passport.authenticate('local'), (req, res) => {
+    const token = sign({ id: req.user!.id }, JWT_SECRET, { expiresIn: '24h' });
+    res.cookie('jwt', token, { httpOnly: true });
+    res.json({ user: req.user });
   });
 
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
+  app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+  app.get('/api/auth/google/callback', passport.authenticate('google'), (req, res) => {
+    res.redirect('/dashboard');
+  });
+
+  app.get('/api/auth/linkedin', passport.authenticate('linkedin'));
+  app.get('/api/auth/linkedin/callback', passport.authenticate('linkedin'), (req, res) => {
+    res.redirect('/dashboard');
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout(() => {
+      res.clearCookie('jwt');
+      res.json({ message: 'Logged out' });
     });
   });
+}
 
-  app.get("/api/user", (req, res) => {
-    console.log("GET /api/user - isAuthenticated:", req.isAuthenticated());
-    if (req.isAuthenticated()) {
-      console.log("User session found:", req.user);
-      res.json(req.user);
-    } else {
-      console.log("No user session found");
-      return res.sendStatus(401);
-    }
-  });
+// Middleware to verify JWT
+export function verifyJWT(req: any, res: any, next: any) {
+  const token = req.cookies.jwt;
+  if (!token) return res.status(401).json({ message: 'No token provided' });
+
+  try {
+    const decoded = verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.userId = (decoded as any).id;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
 }
