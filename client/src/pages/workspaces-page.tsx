@@ -30,6 +30,9 @@ import { formatWorkspaceType } from "@/lib/utils";
 export default function WorkspacesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
+  const [capacity, setCapacity] = useState<number | undefined>(undefined);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
@@ -44,7 +47,17 @@ export default function WorkspacesPage() {
   
   const createBookingMutation = useCreateBooking();
   
-  // Filter workspaces based on search and type
+  // Helper function to get unique locations from workspaces
+  const getUniqueLocations = () => {
+    if (!workspaces) return [];
+    const locations = workspaces.map(workspace => workspace.location);
+    return ["all", ...Array.from(new Set(locations))];
+  };
+  
+  // Get all workspace types from schema
+  const workspaceTypes = ["all", "desk", "meeting_room", "collaborative_space", "private_office", "focus_pod"];
+  
+  // Filter workspaces based on all criteria
   const filteredWorkspaces = workspaces?.filter((workspace) => {
     const matchesSearch = 
       workspace.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,7 +66,13 @@ export default function WorkspacesPage() {
     const matchesType = 
       selectedType === "all" || workspace.type === selectedType;
     
-    return matchesSearch && matchesType;
+    const matchesLocation = 
+      selectedLocation === "all" || workspace.location === selectedLocation;
+    
+    const matchesCapacity = 
+      !capacity || workspace.capacity >= capacity;
+    
+    return matchesSearch && matchesType && matchesLocation && matchesCapacity;
   });
   
   const handleBookNow = (workspace: Workspace) => {
@@ -74,9 +93,15 @@ export default function WorkspacesPage() {
     
     createBookingMutation.mutate({
       workspaceId: selectedWorkspace.id,
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
-      status: "confirmed"
+      startTime: startDateTime,
+      endTime: endDateTime,
+      status: "confirmed",
+      title: `Booking for ${selectedWorkspace.name}`,
+      description: "Regular workspace booking",
+      participants: null,
+      paymentStatus: "unpaid",
+      amount: selectedWorkspace.hourlyRate ? 
+        Math.round((endDateTime.getTime() - startDateTime.getTime()) / 3600000) * selectedWorkspace.hourlyRate : 0
     });
     
     setBookingDialogOpen(false);
@@ -160,11 +185,109 @@ export default function WorkspacesPage() {
                 >
                   Meeting Rooms
                 </Button>
-                <Button variant="outline" className="flex gap-2">
+                <Button 
+                  variant={selectedType === "collaborative_space" ? "secondary" : "outline"}
+                  onClick={() => setSelectedType("collaborative_space")}
+                >
+                  Collaborative Spaces
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex gap-2"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
                   <Filter className="h-5 w-5" />
                   Filters
                 </Button>
               </div>
+              
+              {showFilters && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-white p-4 rounded-lg shadow-sm mt-4"
+                >
+                  <h3 className="font-medium mb-3">Advanced Filters</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Location Filter */}
+                    <div>
+                      <label className="text-sm font-medium block mb-1">Location</label>
+                      <Select 
+                        value={selectedLocation} 
+                        onValueChange={setSelectedLocation}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getUniqueLocations().map((location) => (
+                            <SelectItem key={location} value={location}>
+                              {location === "all" ? "All Locations" : location}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Capacity Filter */}
+                    <div>
+                      <label className="text-sm font-medium block mb-1">Minimum Capacity</label>
+                      <Select 
+                        value={capacity?.toString() || ""} 
+                        onValueChange={(value) => setCapacity(value ? parseInt(value) : undefined)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Any capacity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Any capacity</SelectItem>
+                          <SelectItem value="1">1+ person</SelectItem>
+                          <SelectItem value="2">2+ people</SelectItem>
+                          <SelectItem value="4">4+ people</SelectItem>
+                          <SelectItem value="6">6+ people</SelectItem>
+                          <SelectItem value="8">8+ people</SelectItem>
+                          <SelectItem value="10">10+ people</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Type Filter for more detailed selection */}
+                    <div>
+                      <label className="text-sm font-medium block mb-1">Workspace Type</label>
+                      <Select 
+                        value={selectedType} 
+                        onValueChange={setSelectedType}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {workspaceTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type === "all" ? "All Types" : formatWorkspaceType(type)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedType("all");
+                        setSelectedLocation("all");
+                        setCapacity(undefined);
+                      }}
+                    >
+                      Reset Filters
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </motion.div>
           
@@ -281,10 +404,14 @@ export default function WorkspacesPage() {
             </DialogClose>
             <Button 
               onClick={handleCreateBooking}
-              isLoading={createBookingMutation.isPending}
               disabled={createBookingMutation.isPending || !selectedDate}
             >
-              Book Now
+              {createBookingMutation.isPending ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+                  Processing...
+                </>
+              ) : "Book Now"}
             </Button>
           </DialogFooter>
         </DialogContent>

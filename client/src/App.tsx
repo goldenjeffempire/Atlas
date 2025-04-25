@@ -46,7 +46,7 @@ function Router() {
   const [location] = useLocation();
   
   // Redirect user to appropriate dashboard after login if they're on the landing page
-  React.useEffect(() => {
+  useEffect(() => {
     if (user && location === "/") {
       window.location.href = "/dashboard";
     }
