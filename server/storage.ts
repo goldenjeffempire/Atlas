@@ -365,14 +365,17 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+  async createNotification(data: InsertNotification): Promise<Notification> {
     try {
-      const [newNotification] = await db
-      .insert(notifications)
-      .values(notificationData)
-      .returning();
-
-      return newNotification;
+      const [notification] = await db
+        .insert(notifications)
+        .values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return notification;
     } catch (error) {
       console.error("Error creating notification:", error);
       throw error;
@@ -413,7 +416,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error marking all notifications as read:", error);
       throw error;
     }
-  },
+  }
 
   async deleteNotification(id: number): Promise<void> {
     try {
@@ -424,7 +427,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error deleting notification:", error);
       throw error;
     }
-  },
+  }
 
   async deleteAllUserNotifications(userId: number): Promise<number> {
     try {
@@ -437,7 +440,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error deleting all user notifications:", error);
       throw error;
     }
-  },
+  }
 
   async deleteReadNotifications(userId: number): Promise<number> {
     try {
@@ -453,7 +456,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error deleting read notifications:", error);
       throw error;
     }
-  },
+  }
 
   // Analytics
   async getAnalytics(): Promise<any> {

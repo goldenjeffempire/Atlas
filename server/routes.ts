@@ -104,6 +104,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get workspace details
       const workspace = await storage.getWorkspace(booking.workspaceId);
+
+      // Create notification for booking confirmation
+      await storage.createNotification({
+        userId: req.user.id,
+        title: "Booking Confirmed",
+        message: `Your booking for ${workspace?.name} has been confirmed`,
+        type: "success",
+        read: false
+      });
       
       // Send confirmation email
       if (workspace && req.user.email) {

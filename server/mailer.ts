@@ -29,6 +29,57 @@ const templates = {
       <p><strong>End:</strong> ${data.endTime}</p>
     </div>
     <p>We look forward to seeing you!</p>
+  `,
+
+  bookingCancellation: (data: BookingConfirmationData) => `
+    <h1>Workspace Booking Cancellation</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Your workspace booking has been cancelled:</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>Start:</strong> ${data.startTime}</p>
+      <p><strong>End:</strong> ${data.endTime}</p>
+    </div>
+    <p>If you did not request this cancellation, please contact support.</p>
+  `,
+
+  bookingModification: (data: BookingConfirmationData) => `
+    <h1>Workspace Booking Updated</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Your workspace booking has been modified:</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>New Start:</strong> ${data.startTime}</p>
+      <p><strong>New End:</strong> ${data.endTime}</p>
+    </div>
+    <p>If you did not make these changes, please contact support immediately.</p>
+  `
+    <h1>Your ATLAS Workspace Booking Confirmation</h1>
+    <p>Hello ${data.userName},</p>
+    <p>Your workspace booking has been confirmed!</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>Start:</strong> ${data.startTime}</p>
+      <p><strong>End:</strong> ${data.endTime}</p>
+      <p><strong>Booking ID:</strong> ${data.bookingId}</p>
+    </div>
+    <p>You can manage your booking from your ATLAS dashboard.</p>
+  `,
+  
+  bookingReminder: (data: BookingConfirmationData) => `
+    <h1>Upcoming Workspace Booking Reminder</h1>
+    <p>Hello ${data.userName},</p>
+    <p>This is a reminder about your upcoming workspace booking:</p>
+    <div style="margin: 20px 0;">
+      <p><strong>Workspace:</strong> ${data.workspaceName}</p>
+      <p><strong>Location:</strong> ${data.workspaceLocation}</p>
+      <p><strong>Start:</strong> ${data.startTime}</p>
+      <p><strong>End:</strong> ${data.endTime}</p>
+    </div>
+    <p>We look forward to seeing you!</p>
   `
 };
 
