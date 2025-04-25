@@ -11,16 +11,18 @@ interface RoleSelectorProps {
 const ROLE_DETAILS = {
   admin: {
     signin: {
-      title: "Sign In as Admin",
-      description: "Access admin dashboard and settings",
+      title: "Sign In as Administrator",
+      description: "Full system access with analytics and management capabilities",
     },
     signup: {
-      title: "Sign Up as Admin",
-      description: "Manage workspaces, users, and analytics",
+      title: "Register as Administrator",
+      description: "Complete control over workspaces, users, and system analytics",
       fields: ["Company Name", "Admin Title", "Department", "Email", "Password"],
+      capabilities: ["User Management", "Analytics Dashboard", "System Settings", "Resource Control"]
     },
     color: "text-purple-300",
     bgColor: "bg-purple-500/20",
+    icon: "Shield",
   },
   general: {
     signin: {

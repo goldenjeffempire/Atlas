@@ -26,16 +26,36 @@ function DashboardRouter() {
 
   if (!user) return <DashboardPage />;
 
+  // Role-specific dashboard routing with feature flags
   switch (user.role) {
     case "admin":
-      return <AdminDashboardPage />;
+      return <AdminDashboardPage features={{
+        manageUsers: true,
+        analytics: true,
+        workspaceManagement: true,
+        advancedBooking: true,
+        systemSettings: true
+      }} />;
     case "employee":
-      return <EnhancedEmployeeDashboardPage />;
+      return <EnhancedEmployeeDashboardPage features={{
+        internalBooking: true,
+        departmentView: true,
+        resourceAccess: true,
+        teamCalendar: true
+      }} />;
     case "general":
-      return <GeneralDashboardPage />;
+      return <GeneralDashboardPage features={{
+        basicBooking: true,
+        publicSpaces: true,
+        personalCalendar: true
+      }} />;
     case "learner":
-      // For now, reuse the general dashboard for learners until we create a learner-specific view
-      return <GeneralDashboardPage />;
+      return <GeneralDashboardPage features={{
+        basicBooking: true,
+        publicSpaces: true,
+        personalCalendar: true,
+        learningResources: true
+      }} />;
     default:
       return <DashboardPage />;
   }

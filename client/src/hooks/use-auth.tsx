@@ -140,5 +140,25 @@ export function useAuth() {
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context;
+
+  // Add role-based permission checking
+  const hasPermission = (permission: string) => {
+    if (!context.user) return false;
+    
+    const rolePermissions = {
+      admin: ["manage_users", "analytics", "system_settings", "all_workspaces", "all_bookings"],
+      employee: ["internal_booking", "team_calendar", "department_resources"],
+      general: ["basic_booking", "public_spaces", "personal_calendar"],
+    };
+    
+    return rolePermissions[context.user.role]?.includes(permission) ?? false;
+  };
+
+  return {
+    ...context,
+    hasPermission,
+    isAdmin: context.user?.role === "admin",
+    isEmployee: context.user?.role === "employee",
+    isGeneral: context.user?.role === "general"
+  };
 }
