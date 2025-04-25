@@ -2,19 +2,15 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LinkedInStrategy } from "passport-linkedin-oauth2";
-import jsonwebtoken from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 const { sign } = jsonwebtoken;
 import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const JWT_EXPIRES = '12h';
 const JWT_REFRESH_EXPIRES = '7d';
-const JWT_OPTIONS: jwt.SignOptions = {
-  algorithm: 'HS512',
-  expiresIn: JWT_EXPIRES,
-  issuer: 'atlas-auth',
-  audience: 'atlas-app',
-  jwtid: crypto.randomBytes(16).toString('hex')
+const JWT_OPTIONS = {
+  expiresIn: '7d'
 };
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -209,14 +205,14 @@ export function setupAuth(app: Express) {
         verified: true
       };
 
-      const token = sign({ id: tempUser.id }, JWT_SECRET, JWT_OPTIONS);
+      const token = jwt.sign({ id: tempUser.id }, JWT_SECRET, JWT_OPTIONS);
       res.cookie('jwt', token, { 
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000 
       });
-      
+
       return res.status(200).json({ 
         success: true,
         user: tempUser
@@ -236,12 +232,12 @@ export function setupAuth(app: Express) {
         if (!user) {
           return res.status(401).json({ error: 'Invalid credentials' });
         }
-        
+
         req.logIn(user, (err) => {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-          
+
           const token = jwt.sign({ id: user.id }, JWT_SECRET, JWT_OPTIONS);
           res.cookie('jwt', token, { 
             httpOnly: true,
@@ -249,7 +245,7 @@ export function setupAuth(app: Express) {
             sameSite: 'strict',
             maxAge: 24 * 60 * 60 * 1000 
           });
-          
+
           const { password, ...safeUserData } = user;
           return res.status(200).json({ 
             success: true,
