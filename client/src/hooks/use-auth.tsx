@@ -46,6 +46,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${user.companyName}!`,
       });
+      
+      // Navigate to the appropriate dashboard based on role
+      if (user.role === 'admin') {
+        window.location.href = '/admin';
+      } else if (user.role === 'employee') {
+        window.location.href = '/employee';
+      } else {
+        window.location.href = '/general';
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -69,6 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome to ATLAS, ${user.companyName}!`,
       });
+      
+      // Navigate to the appropriate dashboard based on role
+      if (user.role === 'admin') {
+        window.location.href = '/admin';
+      } else if (user.role === 'employee') {
+        window.location.href = '/employee';
+      } else {
+        window.location.href = '/general';
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -89,6 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logout successful",
         description: "You have been logged out successfully",
       });
+      // Navigate to the landing page after logout
+      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({
