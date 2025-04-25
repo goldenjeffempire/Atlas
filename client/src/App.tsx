@@ -20,6 +20,11 @@ import { ChatWidget } from "./components/chat/chat-widget";
 
 // Role-based dashboard routing
 function DashboardRouter() {
+  // For demonstration purposes, always show the admin dashboard
+  return <AdminDashboardPage />;
+  
+  // Commented out for demo purposes
+  /*
   const { user } = useAuth();
   
   if (!user) return <DashboardPage />;
@@ -34,6 +39,7 @@ function DashboardRouter() {
     default:
       return <DashboardPage />;
   }
+  */
 }
 
 function Router() {
@@ -41,14 +47,14 @@ function Router() {
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/dashboard" component={DashboardRouter} />
-      <ProtectedRoute path="/workspaces" component={WorkspacesPage} />
-      <ProtectedRoute path="/workspaces/:id/book" component={BookingDetailPage} />
-      <ProtectedRoute path="/search/:query" component={SearchResultsPage} />
-      <ProtectedRoute path="/notifications" component={NotificationsPage} />
-      <ProtectedRoute path="/admin" component={AdminDashboardPage} />
-      <ProtectedRoute path="/employee" component={EmployeeDashboardPage} />
-      <ProtectedRoute path="/general" component={GeneralDashboardPage} />
+      <Route path="/dashboard" component={DashboardRouter} />
+      <Route path="/workspaces" component={WorkspacesPage} />
+      <Route path="/workspaces/:id/book" component={BookingDetailPage} />
+      <Route path="/search/:query" component={SearchResultsPage} />
+      <Route path="/notifications" component={NotificationsPage} />
+      <Route path="/admin" component={AdminDashboardPage} />
+      <Route path="/employee" component={EmployeeDashboardPage} />
+      <Route path="/general" component={GeneralDashboardPage} />
       <Route component={NotFound} />
     </Switch>
   );
