@@ -77,8 +77,8 @@ export class DatabaseStorage implements IStorage {
       
       // Create test users if they don't exist
       if (!adminUser) {
-        // Create hashed passwords
-        const hashedPassword = '$fa9284c2cf964eb8d8fe5cf7176bf184c2c07226b04ba1b10b62e183eb065c98ed9c5812b27c78686a6c95ebfb7d7f3bfa7498e3a06c9.d68f4f29eef6b324';
+        // Use a simple, consistent password hash for test users
+        const hashedPassword = 'test1234_hash';
 
         // Create admin user
         await this.createUser({
