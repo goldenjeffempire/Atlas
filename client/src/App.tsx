@@ -124,24 +124,27 @@ function App() {
 
   return (
     <div className={darkMode ? 'dark' : ''}>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          {/* Chat widget is rendered here when authenticated */}
-          <ChatWidgetContainer />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            {/* Chat widget is rendered here when authenticated */}
+            <ChatWidgetContainer />
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </div>
   );
 }
 
 // Simplified chat widget container that shows for all users
 function ChatWidgetContainer() {
   const [location] = useLocation();
-  // Hide chat widget on landing page
-  if (location === "/") return null;
+  const { user } = useAuth();
+  
+  // Only show chat widget for authenticated users, hide on landing
+  if (!user || location === "/") return null;
 
   return <ChatWidget />;
 }

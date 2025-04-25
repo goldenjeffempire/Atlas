@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 bg-gray-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div
@@ -179,13 +179,16 @@ export default function AdminDashboardPage() {
                         <div className="text-3xl font-bold">{analyticsData.totalWorkspaces}</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="w-full lg:w-auto">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">Occupancy Rate</CardTitle>
                         <CardDescription>Current utilization</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="text-3xl font-bold">{analyticsData.occupancyRate}%</div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {analyticsData.occupancyRate >= 80 ? 'High demand' : 'Available capacity'}
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -401,6 +404,9 @@ export default function AdminDashboardPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-3xl font-bold">{analyticsData.occupancyRate}%</div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {analyticsData.occupancyRate >= 80 ? 'High demand' : 'Available capacity'}
+                        </div>
                       </CardContent>
                     </Card>
                     <Card>

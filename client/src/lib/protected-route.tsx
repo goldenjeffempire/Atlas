@@ -24,7 +24,16 @@ export function ProtectedRoute({
   if (!user) {
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <Redirect to={`/auth?redirect=${encodeURIComponent(path)}`} />
+      </Route>
+    );
+  }
+
+  // Check role-based access if specified
+  if (Component.requiredRole && user.role !== Component.requiredRole) {
+    return (
+      <Route path={path}>
+        <Redirect to="/unauthorized" />
       </Route>
     );
   }

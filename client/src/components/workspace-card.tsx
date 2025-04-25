@@ -53,6 +53,9 @@ export default function WorkspaceCard({
             variant={isAvailable ? "default" : "secondary"}
             disabled={!isAvailable}
             onClick={() => isAvailable && onBookNow(workspace)}
+            aria-label={`Book ${workspace.name}`}
+            role="button"
+            tabIndex={0}
           >
             {isAvailable ? "Book Now" : "Unavailable"}
           </Button>

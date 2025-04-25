@@ -176,11 +176,22 @@ export default function BookingDetailPage() {
                       <span>{workspace.location}</span>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="flex items-center">
-                        <Users className="h-5 w-5 text-gray-400 mr-2" />
-                        <span>Capacity: {workspace.capacity}</span>
+                    {isLoading ? (
+                      <div className="grid grid-cols-2 gap-4 mb-6 animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded"></div>
+                        <div className="h-8 bg-gray-200 rounded"></div>
                       </div>
+                    ) : error ? (
+                      <div className="text-red-500 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" />
+                        <span>Failed to load workspace details</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="flex items-center">
+                          <Users className="h-5 w-5 text-gray-400 mr-2" />
+                          <span>Capacity: {workspace.capacity}</span>
+                        </div>
                       <div className="flex items-center">
                         <Clock className="h-5 w-5 text-gray-400 mr-2" />
                         <span>8:00 AM - 6:00 PM</span>

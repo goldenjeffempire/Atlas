@@ -156,9 +156,20 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/auth/login', passport.authenticate('local'), (req, res) => {
-    const token = sign({ id: req.user!.id }, JWT_SECRET, { expiresIn: '24h' });
-    res.cookie('jwt', token, { httpOnly: true });
-    res.json({ user: req.user });
+    const token = sign({ id: req.user!.id }, JWT_SECRET, { 
+      expiresIn: '24h',
+      audience: 'atlas-app',
+      issuer: 'atlas-auth'
+    });
+    res.cookie('jwt', token, { 
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+    // Don't send sensitive user data
+    const { password, ...safeUserData } = req.user!;
+    res.json({ user: safeUserData });
   });
 
   app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
