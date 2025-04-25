@@ -377,7 +377,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error creating notification:", error);
       throw error;
     }
-  },
+  }
 
   async markNotificationAsRead(id: number): Promise<Notification> {
     try {
