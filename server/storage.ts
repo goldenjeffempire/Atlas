@@ -92,14 +92,15 @@ export class DatabaseStorage implements IStorage {
         // Use a simple, consistent password hash for test users
         const hashedPassword = 'test1234_hash';
 
-        // Create admin user
+        // Create superuser/admin
         await this.createUser({
-          email: 'admin@atlas.com',
-          password: hashedPassword,
+          email: 'admin@atlas.app',
+          password: 'admin123',
           companyName: 'ATLAS Admin',
           role: 'admin',
-          adminTitle: 'Facility Manager',
-          adminDepartment: 'Operations'
+          adminTitle: 'System Administrator',
+          adminDepartment: 'IT Operations',
+          isActive: true
         });
 
         // Create employee user
