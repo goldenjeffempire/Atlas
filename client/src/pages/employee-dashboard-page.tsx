@@ -407,7 +407,7 @@ export default function EmployeeDashboardPage() {
                       onClick={() => setViewMode("calendar")}
                       className="h-8 px-2 text-xs"
                     >
-                      <Calendar className="h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -470,7 +470,7 @@ export default function EmployeeDashboardPage() {
                                       size="sm"
                                       onClick={() => handleReschedule(booking)}
                                     >
-                                      <Calendar className="h-3.5 w-3.5 mr-1" />
+                                      <CalendarIcon className="h-3.5 w-3.5 mr-1" />
                                       Reschedule
                                     </Button>
                                     <Button 
@@ -590,7 +590,7 @@ export default function EmployeeDashboardPage() {
                                   </p>
                                 </div>
                                 <Button variant="ghost" size="sm" onClick={() => handleReschedule(booking)}>
-                                  <Calendar className="h-3.5 w-3.5" />
+                                  <CalendarIcon className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             ))
