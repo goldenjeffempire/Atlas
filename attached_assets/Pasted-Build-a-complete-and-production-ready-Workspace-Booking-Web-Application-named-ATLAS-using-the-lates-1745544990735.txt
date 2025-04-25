@@ -1,0 +1,190 @@
+Build a complete and production-ready Workspace Booking Web Application named ATLAS, using the latest Next.js 14 (App Router), Tailwind CSS, TypeScript, and shadcn/ui components. The application should be visually appealing, interactive, fast, and scalable — with a modern and professional UI/UX.
+
+Follow the design direction of a split-layout sign-up and login flow, a card-based dashboard, and a responsive grid of workspace listings with dynamic booking actions. Use Framer Motion for animations and transitions, and ensure full WCAG accessibility and responsiveness across devices.
+
+
+
+
+---
+
+✅ Core Functional Requirements (Must-Have)
+
+Implement the following features:
+
+Role-Based Registration & Login
+Users should register or log in as either Admin, General, or Employee.
+
+Use JWT authentication with httpOnly cookies
+
+Protect routes based on role-level access.
+
+
+Booking System
+
+Users can:
+
+View workspace availability in real-time.
+
+Create, reschedule, and cancel bookings.
+
+Book workspaces for specific dates/times.
+
+
+Bookings should show on a calendar-style dashboard.
+
+Booking status should update immediately after action.
+
+
+Real-Time Availability Display
+
+Use polling or WebSockets to show updated workspace status (Available, Booked, etc.)
+
+
+Email Notifications
+
+Booking confirmation, cancellation, rescheduling, and reminders.
+
+Use nodemailer or a transactional email service.
+
+
+Admin Dashboard
+
+Visual analytics:
+
+Usage reports
+
+Peak times
+
+Occupancy rates
+
+
+Admins should have full CRUD access to:
+
+Workspaces
+
+Bookings
+
+Users (optional)
+
+
+
+Role-Based Access Control (RBAC)
+
+Admin: full access
+
+Employee: workspace booking only
+
+General: read-only or limited booking rights
+
+
+
+
+---
+
+✨ Nice-to-Have Enhancements
+
+Enhance the app with the following advanced features:
+
+User Profile Management
+
+View/edit profile
+
+Upload avatar
+
+View booking history and preferences
+
+
+Calendar Integration
+
+Google Calendar two-way sync (OAuth-based)
+
+
+Availability Dashboard
+
+A visual overview of current space availability by location/hub
+
+Filter by features (e.g. AV, monitors, ergonomic chairs)
+
+
+Admin Management Features
+
+Define workspace types (e.g., desk, conference room)
+
+Set capacity limits
+
+Tag features (e.g., Standing Desk, Power Outlets)
+
+
+Check-in/Check-out System
+
+Virtual front desk or QR check-in for booked users
+
+
+Workspace Utilization Metrics
+
+Generate usage reports with heatmaps or graphs
+
+
+Payments Integration
+
+Support for premium spaces with Stripe or Paystack
+
+
+Mobile Optimization
+
+Fully responsive UI
+
+Mobile-first PWA with offline capabilities
+
+
+Tool Integrations
+
+Slack: booking notifications
+
+Google Workspace: calendar + identity
+
+Zoom: meeting room integrations
+
+
+Dedicated Mobile App (Optional)
+
+React Native implementation or native build
+
+
+Polished Interactions
+
+Tooltip guidance
+
+Hover animations
+
+Page transitions (Framer Motion)
+
+
+
+
+---
+
+💄 Design and UX Expectations
+
+Modern, clean, minimalist UI
+
+Use a professional and elegant color palette (light purple, white, grayscale)
+
+Apply consistent branding (e.g., atlas logo and heading styles)
+
+Use Framer Motion for smooth:
+
+Component transitions
+
+Hover animations
+
+Route changes
+
+
+Ensure the app is:
+
+Fully WCAG-compliant and accessible
+
+Responsive across all screen sizes (mobile, tablet, desktop)
+
+Easy to navigate with sticky headers and logical routing
