@@ -41,8 +41,28 @@ export default function BookingDetailPage() {
   // Fetch workspace details
   const { data: workspace, isLoading, error } = useQuery<Workspace>({
     queryKey: [`/api/workspaces/${workspaceId}`],
-    enabled: !!workspaceId
+    enabled: !!workspaceId,
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30 // 30 minutes
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        <AlertTriangle className="h-6 w-6 mr-2" />
+        Failed to load workspace details
+      </div>
+    );
+  }
   
   const createBookingMutation = useCreateBooking();
   
