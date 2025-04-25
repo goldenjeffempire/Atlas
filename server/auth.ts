@@ -195,6 +195,37 @@ export function setupAuth(app: Express) {
     }
   });
 
+  app.post('/api/auth/direct-access', async (req, res) => {
+    try {
+      // Create a temporary user session
+      const tempUser = {
+        id: 999,
+        email: 'guest@atlas.app',
+        name: 'Guest User',
+        role: 'general',
+        companyName: 'Guest Company',
+        isActive: true,
+        verified: true
+      };
+
+      const token = jwt.sign({ id: tempUser.id }, JWT_SECRET, JWT_OPTIONS);
+      res.cookie('jwt', token, { 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 
+      });
+      
+      return res.status(200).json({ 
+        success: true,
+        user: tempUser
+      });
+    } catch (error) {
+      console.error('Direct access error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   app.post('/api/auth/login', async (req, res, next) => {
     try {
       passport.authenticate('local', async (err, user, info) => {
