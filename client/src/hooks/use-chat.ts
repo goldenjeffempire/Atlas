@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,10 +20,25 @@ export type ChatResponse = {
   citations?: string[];
 };
 
+// Query key for chat messages
+const CHAT_MESSAGES_KEY = 'chatMessages';
+
 export function useChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Get messages from query cache
+  const { data: messages = [] } = useQuery<ChatMessage[]>({
+    queryKey: [CHAT_MESSAGES_KEY],
+    // No queryFn needed as we'll manage the data in the cache manually
+    initialData: [],
+    // Don't refetch on window focus or other triggers
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
 
   const chatMutation = useMutation({
     mutationFn: async (messages: ChatMessage[]) => {
@@ -49,6 +64,11 @@ export function useChat() {
     },
   });
 
+  // Update messages in the query cache
+  const updateMessages = (newMessages: ChatMessage[]) => {
+    queryClient.setQueryData([CHAT_MESSAGES_KEY], newMessages);
+  };
+
   // Adds a user message and triggers the AI response
   const sendMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
@@ -57,7 +77,8 @@ export function useChat() {
     const newUserMessage: ChatMessage = { role: 'user' as ChatRole, content: userMessage };
     const newMessages = [...messages, newUserMessage];
     
-    setMessages(newMessages);
+    // Update messages in cache
+    updateMessages(newMessages);
     setIsTyping(true);
     
     try {
@@ -73,7 +94,7 @@ export function useChat() {
           role: 'assistant' as ChatRole, 
           content: assistantMessage 
         };
-        setMessages([...newMessages, assistantChatMessage]);
+        updateMessages([...newMessages, assistantChatMessage]);
       }
     } catch (error) {
       console.error('Failed to get chat response:', error);
@@ -84,7 +105,7 @@ export function useChat() {
 
   // Reset the chat conversation
   const resetChat = () => {
-    setMessages([]);
+    updateMessages([]);
   };
 
   return {

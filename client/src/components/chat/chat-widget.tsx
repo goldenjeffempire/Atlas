@@ -6,6 +6,7 @@ import { ChatMessageItem } from './chat-message';
 import { ChatInput } from './chat-input';
 import { useChat, ChatMessage, ChatRole } from '@/hooks/use-chat';
 import { Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,17 +33,22 @@ export function ChatWidget() {
     setIsMinimized(!isMinimized);
   };
 
-  // We'll handle the welcome message differently
-  // No need to use setMessages from an effect since it would cause an infinite loop
-  const showInitialMessage = isOpen && messages.length === 0;
+  // Handle the welcome message with useEffect that runs only once
+  const queryClient = useQueryClient();
   
-  // Add initial messages if needed (only referenced, not changing state in effect)
-  const displayMessages = showInitialMessage ? 
-    [{ 
-      role: 'assistant' as ChatRole, 
-      content: 'Hello! I am ATLAS Assistant. How can I help you with workspace bookings, account management, or other workspace-related questions?' 
-    }] : 
-    messages;
+  useEffect(() => {
+    // If there are no messages in the cache, add a welcome message when component loads
+    const currentMessages = queryClient.getQueryData<ChatMessage[]>(['chatMessages']) || [];
+    if (currentMessages.length === 0) {
+      queryClient.setQueryData(['chatMessages'], [{ 
+        role: 'assistant' as ChatRole, 
+        content: 'Hello! I am ATLAS Assistant. How can I help you with workspace bookings, account management, or other workspace-related questions?' 
+      }]);
+    }
+  }, [queryClient]);
+  
+  // Use messages directly from the hook now
+  const displayMessages = messages;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
