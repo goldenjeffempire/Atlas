@@ -169,17 +169,29 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/auth/login', passport.authenticate('local'), (req, res) => {
-    const token = jwt.sign({ id: req.user!.id }, JWT_SECRET, JWT_OPTIONS);
-    res.cookie('jwt', token, { 
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    });
-    // Don't send sensitive user data
-    const { password, ...safeUserData } = req.user!;
-    res.json({ user: safeUserData });
+  app.post('/api/auth/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        return res.status(500).json({ message: err.message });
+      }
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: err.message });
+        }
+        const token = jwt.sign({ id: user.id }, JWT_SECRET, JWT_OPTIONS);
+        res.cookie('jwt', token, { 
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
+        const { password, ...safeUserData } = user;
+        return res.json({ user: safeUserData });
+      });
+    })(req, res, next);
   });
 
   app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
