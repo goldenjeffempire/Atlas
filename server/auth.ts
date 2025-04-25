@@ -141,11 +141,37 @@ export function setupAuth(app: Express) {
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { email, password, name, role } = req.body;
+      const { email, password, name, role, companyName, adminTitle, adminDepartment } = req.body;
 
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: 'Email already registered' });
+      }
+
+      // Special handling for admin registration
+      if (role === 'admin') {
+        const existingAdmins = await storage.getAdminCount();
+        if (existingAdmins === 0 || req.body.isOwner) {
+          // First admin becomes super admin
+          const salt = randomBytes(16).toString('hex');
+          const hashedBuffer = await scryptAsync(password, salt, 64) as Buffer;
+          const hashedPassword = `${hashedBuffer.toString('hex')}.${salt}`;
+
+          const user = await storage.createUser({
+            email,
+            password: hashedPassword,
+            name,
+            role: 'admin',
+            companyName,
+            adminTitle,
+            adminDepartment,
+            isActive: true,
+            verified: true,
+            isSuperAdmin: true
+          });
+
+          return res.json({ message: 'Admin registration successful', user });
+        }
       }
 
       const salt = randomBytes(16).toString('hex');

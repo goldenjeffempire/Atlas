@@ -65,6 +65,11 @@ export interface IStorage {
 
   // Session storage
   sessionStore: Store;
+
+  // Admin operations
+  getAdminCount(): Promise<number>;
+  isAdminUser(userId: number): Promise<boolean>;
+  getAllAdmins(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -523,6 +528,36 @@ export class DatabaseStorage implements IStorage {
       popularWorkspaces,
       totalUsers: allUsers.length
     };
+  }
+
+
+  async getAdminCount(): Promise<number> {
+    try {
+      const admins = await db.select().from(users).where(eq(users.role, 'admin'));
+      return admins.length;
+    } catch (error) {
+      console.error("Error getting admin count:", error);
+      throw error;
+    }
+  }
+
+  async isAdminUser(userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      return user?.role === 'admin';
+    } catch (error) {
+      console.error("Error checking admin user:", error);
+      throw error;
+    }
+  }
+
+  async getAllAdmins(): Promise<User[]> {
+    try {
+      return await db.select().from(users).where(eq(users.role, 'admin'));
+    } catch (error) {
+      console.error("Error getting all admins:", error);
+      throw error;
+    }
   }
 }
 
