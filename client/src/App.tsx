@@ -96,7 +96,14 @@ function Router() {
 }
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+  
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
+
   return (
+    <div className={darkMode ? 'dark' : ''}>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>

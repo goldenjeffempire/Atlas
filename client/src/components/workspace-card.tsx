@@ -22,7 +22,7 @@ export default function WorkspaceCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
     >
-      <Card className="overflow-hidden card-hover h-full">
+      <Card className="overflow-hidden border-border/40 transition-all hover:border-border/80 touch-manipulation"> {/* Added touch-manipulation class */}
         <div className="h-48 w-full overflow-hidden relative">
           <img
             src={workspace.imageUrl}
