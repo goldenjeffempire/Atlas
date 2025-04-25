@@ -9,7 +9,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   companyName: text("company_name").notNull(),
-  role: text("role", { enum: ["admin", "general", "employee"] }).notNull().default("general"),
+  role: text("role", { enum: ["admin", "general", "employee", "learner"] }).notNull().default("general"),
   // Admin fields
   adminTitle: text("admin_title"),
   adminDepartment: text("admin_department"),
@@ -115,7 +115,7 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
 });
 
 // Types
-export type Role = "admin" | "general" | "employee";
+export type Role = "admin" | "general" | "employee" | "learner";
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "checked_in" | "completed";
 export type NotificationType = "booking_confirmation" | "booking_reminder" | "booking_cancellation" | "admin_message" | "system_alert";
 export type PaymentStatus = "unpaid" | "paid" | "refunded";
