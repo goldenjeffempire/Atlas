@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WorkspaceManagement } from "@/components/workspace-management";
 import { 
   Search, 
   LayoutGrid, 
@@ -114,7 +115,7 @@ export default function AdminDashboardPage() {
           >
             <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Welcome back, {user?.name || user?.companyName || 'Admin'}
+              Welcome back, {user?.companyName || 'Admin'}
             </p>
           </motion.div>
 
@@ -348,67 +349,7 @@ export default function AdminDashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="flex justify-between mb-6">
-                    <h2 className="text-xl font-semibold">Manage Workspaces</h2>
-                    <Button>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Workspace
-                    </Button>
-                  </div>
-
-                  {workspacesLoading ? (
-                    <div className="text-center py-10">Loading workspaces...</div>
-                  ) : workspaces.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground">
-                      No workspaces found. Add your first workspace to get started.
-                    </div>
-                  ) : (
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {workspaces.map((workspace) => (
-                            <tr key={workspace.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="font-medium text-gray-900">{workspace.name}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-gray-500">{workspace.location}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-gray-500">{workspace.type}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-gray-500">{workspace.capacity}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                  Active
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-900">
-                                  Edit
-                                </Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-900">
-                                  Delete
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  <WorkspaceManagement />
                 </motion.div>
               </TabsContent>
 
@@ -426,7 +367,6 @@ export default function AdminDashboardPage() {
                       Add User
                     </Button>
                   </div>
-
                   <div className="text-center py-10 text-muted-foreground">
                     User management functionality will be implemented in the next phase.
                   </div>
@@ -502,7 +442,13 @@ export default function AdminDashboardPage() {
 }
 
 // Badge component used in the code
-function Badge({ variant = "default", children, className }) {
+interface BadgeProps {
+  variant?: 'default' | 'destructive' | 'outline';
+  children: React.ReactNode;
+  className?: string;
+}
+
+function Badge({ variant = "default", children, className = "" }: BadgeProps) {
   const variantClasses = {
     default: "bg-primary text-primary-foreground",
     destructive: "bg-destructive text-destructive-foreground",
@@ -510,7 +456,7 @@ function Badge({ variant = "default", children, className }) {
   };
 
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant]} ${className || ""}`}>
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}>
       {children}
     </span>
   );

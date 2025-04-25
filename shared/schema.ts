@@ -50,7 +50,7 @@ export const workspaces = pgTable("workspaces", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   location: text("location").notNull(),
-  type: text("type", { enum: ["desk", "meeting_room", "collaborative_space", "private_office", "focus_pod"] }).notNull(),
+  type: text("type", { enum: ["desk", "meeting_room", "collaborative_space", "private_office", "focus_pod", "virtual_conference", "phone_booth"] }).notNull(),
   imageUrl: text("image_url").notNull(),
   features: jsonb("features").notNull(),
   capacity: integer("capacity").notNull().default(1),
@@ -62,6 +62,8 @@ export const workspaces = pgTable("workspaces", {
   // QR code for check-in
   checkInCode: text("check_in_code"),
   // Integration IDs
+  openingTime: text("opening_time").default("09:00"),
+  closingTime: text("closing_time").default("17:00"),
   zoomRoomId: text("zoom_room_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -24,7 +24,7 @@ import { motion } from "framer-motion";
 // Define the form schema
 const workspaceFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
-  type: z.string(),
+  type: z.enum(["desk", "meeting_room", "collaborative_space", "private_office", "focus_pod", "virtual_conference", "phone_booth"]),
   location: z.string().min(3, "Location is required"),
   description: z.string().optional(),
   capacity: z.number().min(1, "Capacity must be at least 1"),
