@@ -48,7 +48,7 @@ function Router() {
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/dashboard" component={DashboardRouter} />
+      <ProtectedRoute path="/dashboard" component={DashboardRouter} />
       
       {/* Protected routes */}
       <ProtectedRoute path="/workspaces" component={WorkspacesPage} />
