@@ -355,15 +355,15 @@ export class DatabaseStorage implements IStorage {
   async getNotification(id: number): Promise<Notification | undefined> {
     try {
       const [notification] = await db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.id, id));
+        .select()
+        .from(notifications)
+        .where(eq(notifications.id, id));
       return notification;
     } catch (error) {
       console.error("Error getting notification:", error);
       throw error;
     }
-  },
+  }
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
     try {
@@ -396,7 +396,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Error marking notification as read:", error);
       throw error;
     }
-  },
+  }
 
   async markAllNotificationsAsRead(userId: number): Promise<number> {
     try {
